@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="description" content="Position ou intérêt ? — un jeu Révéla, par DSP Avocats. Trouvez ce qui compte vraiment sous chaque demande." />
+<meta name="theme-color" content="#0E1A2F" />
+<title>Position ou intérêt ? — un jeu Révéla</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400;1,500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --table: #0E1A2F; --table-2: #15253F; --card: #F6F0E3; --card-edge: #E4D9C3;
+  --ink: #1B2A4A; --muted: #6E6A5E; --gold: #C9A45C; --gold-soft: #E2C88F; --cream: #F3ECDD; --dim: #9EA6B6;
+  --hot: #D0675B; --ok: #8DB07A; --ko: #D0675B;
+  --o: #3D6FA5; --s: #B4562F; --b: #6E8F4E; --d: #8A6A1F;
+  --serif: "Cormorant Garamond", Garamond, "Times New Roman", serif; --sans: "DM Sans", "Helvetica Neue", Arial, sans-serif;
+  box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+:root:not([data-theme="light"]) { color-scheme: dark; }
+*, *::before, *::after { box-sizing: inherit; }
+html, body { min-height: 100%; }
+body { margin: 0; background: radial-gradient(120% 80% at 50% 25%, var(--table-2), var(--table) 70%) fixed var(--table);
+  color: var(--cream); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; cursor: pointer; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.app { max-width: 540px; margin: 0 auto; padding: 16px 20px 28px; min-height: 100vh; display: flex; flex-direction: column; }
+.top { display: flex; align-items: center; justify-content: space-between; min-height: 40px; }
+.brand { display: inline-flex; align-items: center; gap: 9px; color: var(--cream); text-decoration: none; }
+.brand svg { color: var(--gold); }
+.brand span { font-family: var(--serif); font-size: 21px; font-weight: 600; letter-spacing: .08em; }
+.counter { font-size: 14px; color: #B9BFCC; text-align: right; }
+.counter strong { color: var(--cream); font-weight: 600; }
+.dots { display: flex; gap: 5px; margin: 12px 0 0; }
+.dots i { flex: 1; height: 3px; border-radius: 2px; background: rgba(243,236,221,.14); }
+.dots i.ok { background: var(--ok); } .dots i.ko { background: var(--ko); } .dots i.now { background: var(--cream); }
+.screen { display: none; flex-direction: column; flex: 1; }
+.screen.on { display: flex; }
+.btn { border: 1px solid var(--cream); background: transparent; border-radius: 999px; padding: 14px 26px; font-size: 16px; font-weight: 500; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
+.btn.main { background: var(--gold); border-color: var(--gold); color: var(--table); font-weight: 600; }
+.btn.main:hover { background: var(--gold-soft); }
+.btn.quiet { border-color: rgba(243,236,221,.35); }
+.btn.quiet:hover { border-color: var(--cream); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+.lede { margin: 0; font-size: 16px; line-height: 1.55; color: #D8D3C6; max-width: 34em; }
+.foot { font-size: 12px; color: #8D95A6; line-height: 1.5; margin: 8px 0 0; }
+.foot a { color: #B9BFCC; }
+
+/* ——— les quatre temps : l’élément signature ——— */
+.osbd { display: flex; flex-wrap: wrap; gap: 4px 6px; line-height: 1.5; }
+.seg { position: relative; padding: 2px 0 15px; }
+.seg span.tx { box-shadow: inset 0 -2px 0 var(--c); }
+.seg span.lb { position: absolute; left: 0; bottom: 0; font-size: 10.5px; font-weight: 600; color: var(--c); white-space: nowrap; letter-spacing: .02em; }
+.seg.o { --c: var(--o); } .seg.s { --c: var(--s); } .seg.b { --c: var(--b); } .seg.d { --c: var(--d); }
+
+/* accueil */
+.intro { gap: 20px; padding: 14px 0; }
+.title { font-family: var(--serif); font-weight: 500; font-size: clamp(48px, 13vw, 64px); line-height: .98; margin: 0; }
+.title em { font-style: italic; color: var(--gold-soft); font-weight: 400; }
+.demo { background: var(--card); color: var(--ink); border-radius: 18px; padding: 18px 20px; box-shadow: 0 18px 46px rgba(0,0,0,.38); }
+.demo .raw { margin: 0 0 12px; font-family: var(--serif); font-style: italic; font-size: 21px; color: #8E3B46; text-decoration: line-through; text-decoration-thickness: 1px; }
+.demo .osbd { font-family: var(--serif); font-size: 19px; }
+.cycle { font-size: 14px; color: #B9BFCC; margin: 0; } .cycle b { color: var(--cream); }
+
+/* jeu */
+.raw-card { margin: 14px 0 12px; padding: 16px 18px; border-radius: 16px; background: rgba(208,103,91,.1); border: 1px solid rgba(208,103,91,.35); }
+.raw-card .ctx { margin: 0 0 4px; font-size: 13px; color: var(--dim); }
+.raw-card .q { margin: 0; font-family: var(--serif); font-style: italic; font-size: clamp(22px, 6vw, 26px); line-height: 1.28; color: #F3D9D3; }
+.ask { margin: 0 0 10px; font-size: 14px; color: var(--dim); }
+.opts { display: grid; gap: 10px; }
+.opt { text-align: left; background: var(--card); color: var(--ink); border: 0; border-radius: 14px; padding: 14px 16px 14px 46px; position: relative;
+  font-family: var(--serif); font-size: 19px; line-height: 1.35; box-shadow: inset 0 0 0 1px var(--card-edge); transition: transform .15s, opacity .2s, box-shadow .2s; }
+.opt::before { content: attr(data-l); position: absolute; left: 14px; top: 13px; width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--muted);
+  font-family: var(--sans); font-size: 12px; font-weight: 600; color: var(--muted); display: flex; align-items: center; justify-content: center; }
+.opt:hover:not(:disabled) { transform: translateX(3px); }
+.opt:disabled { cursor: default; }
+.opt.dim { opacity: .45; }
+.opt.good { box-shadow: inset 0 0 0 3px var(--ok); opacity: 1; }
+.opt.bad { box-shadow: inset 0 0 0 3px var(--ko); opacity: 1; }
+.verdict { margin-top: 14px; padding: 16px 18px; border-radius: 16px; background: rgba(243,236,221,.06); border-left: 3px solid var(--v); display: none; }
+.verdict.on { display: block; animation: rise .22s ease-out; }
+.verdict h2 { margin: 0 0 4px; font-family: var(--serif); font-size: 24px; font-weight: 600; }
+.verdict .why { margin: 0 0 12px; font-size: 15px; line-height: 1.5; color: #E2DDD1; }
+.verdict .model { background: var(--card); color: var(--ink); border-radius: 12px; padding: 12px 14px 4px; margin: 0 0 12px; font-family: var(--serif); font-size: 18px; }
+.verdict .model p { margin: 0 0 6px; font-family: var(--sans); font-size: 12.5px; color: var(--muted); }
+.verdict .btn { padding: 11px 20px; font-size: 15px; }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* fin de partie, synthèse */
+.end, .synth { gap: 16px; padding: 10px 0 20px; }
+.score { font-family: var(--serif); font-size: 84px; line-height: .9; margin: 6px 0 0; font-weight: 500; }
+.score small { font-size: 30px; color: var(--dim); }
+.read { font-family: var(--serif); font-size: 23px; line-height: 1.3; margin: 0; }
+.lesson { margin: 0; padding: 14px 16px; border-radius: 14px; background: var(--card); color: var(--ink); font-size: 15px; line-height: 1.5; }
+.lesson b { font-family: var(--serif); font-size: 19px; display: block; margin-bottom: 2px; }
+.bars { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.bars li { display: grid; grid-template-columns: 150px 1fr 34px; gap: 12px; align-items: center; font-size: 14.5px; color: #D8D3C6; }
+.bars .tr { height: 6px; border-radius: 3px; background: rgba(243,236,221,.12); overflow: hidden; }
+.bars .tr span { display: block; height: 100%; border-radius: 3px; background: var(--hot); }
+.bars .v { text-align: right; color: var(--cream); font-weight: 600; }
+.toast { min-height: 18px; font-size: 13.5px; color: var(--gold-soft); margin: 0; }
+.synth h1 { font-family: var(--serif); font-weight: 500; font-size: clamp(36px, 10vw, 46px); line-height: 1.02; margin: 4px 0 0; }
+.synth h2 { font-family: var(--serif); font-weight: 600; font-size: 25px; margin: 8px 0 0; }
+.steps { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; counter-reset: k; }
+.steps li { background: var(--card); color: var(--ink); border-radius: 14px; padding: 13px 16px 13px 52px; position: relative; counter-increment: k; border-left: 5px solid var(--c); }
+.steps li::before { content: counter(k); position: absolute; left: 18px; top: 10px; font-family: var(--serif); font-size: 28px; font-weight: 600; color: var(--c); }
+.steps b { font-family: var(--serif); font-size: 20px; display: block; }
+.steps span { font-size: 14.5px; line-height: 1.45; }
+.steps i { display: block; margin-top: 4px; font-family: var(--serif); font-size: 17px; color: #4A4F60; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pair div { border-radius: 14px; padding: 12px 14px; font-size: 14.5px; line-height: 1.6; }
+.pair .close { background: rgba(208,103,91,.1); border: 1px solid rgba(208,103,91,.35); }
+.pair .open { background: rgba(141,176,122,.1); border: 1px solid rgba(141,176,122,.4); }
+.pair h3 { margin: 0 0 4px; font-family: var(--serif); font-size: 19px; font-weight: 600; }
+@media (max-width: 420px) { .pair { grid-template-columns: 1fr; } .bars li { grid-template-columns: 120px 1fr 30px; } }
+@media (prefers-reduced-motion: reduce) { .verdict.on { animation: none; } .opt { transition: none; } }
+
+/* ——— l’iceberg : l’élément signature ——— */
+.ice { margin: 12px 0 12px; border-radius: 18px; overflow: hidden; box-shadow: 0 18px 46px rgba(0,0,0,.38); }
+.ice .above { background: var(--card); color: var(--ink); padding: 16px 18px 20px; }
+.ice .scene { margin: 0 0 10px; font-size: 14.5px; line-height: 1.5; color: #4A4F60; }
+.ice .ctx { margin: 0 0 4px; font-size: 12.5px; color: var(--muted); }
+.ice .pos { margin: 0; font-family: var(--serif); font-size: clamp(22px, 6vw, 26px); line-height: 1.25; font-weight: 500; }
+.ice .lab { display: block; font-family: var(--sans); font-size: 11.5px; font-weight: 600; letter-spacing: .03em; margin-bottom: 4px; }
+.ice .above .lab { color: #8E3B46; }
+.ice .wave { display: block; width: 100%; height: 18px; background: var(--card); }
+.ice .below { background: linear-gradient(180deg, #2A4A6E, #1A3050); padding: 6px 18px 18px; min-height: 96px; }
+.ice .below .lab { color: #A8C6E4; }
+.ice .int { margin: 0; font-family: var(--serif); font-size: 21px; line-height: 1.3; color: #EAF2FA; }
+.ice .int.hidden { color: rgba(234,242,250,.35); font-style: italic; }
+.ice .sol { margin: 12px 0 0; padding: 10px 12px; border-radius: 10px; background: rgba(243,236,221,.1); border-left: 3px solid var(--gold); font-size: 14.5px; line-height: 1.5; color: #F1EADB; display: none; }
+.ice .sol.on { display: block; animation: rise .25s ease-out; }
+.ice .sol b { color: var(--gold-soft); font-weight: 600; }
+.opts .opt { font-family: var(--sans); font-size: 15.5px; padding-top: 13px; padding-bottom: 13px; }
+.mini-ice { border-radius: 16px; overflow: hidden; }
+.mini-ice .t { background: var(--card); color: var(--ink); padding: 12px 16px 6px; font-family: var(--serif); font-size: 19px; }
+.mini-ice .b { background: linear-gradient(180deg, #2A4A6E, #1A3050); color: #EAF2FA; padding: 10px 16px 12px; font-family: var(--serif); font-size: 18px; }
+.mini-ice small { display: block; font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: .03em; }
+.mini-ice .t small { color: #8E3B46; } .mini-ice .b small { color: #A8C6E4; }
+.principles { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; counter-reset: k; }
+.principles li { background: var(--card); color: var(--ink); border-radius: 14px; padding: 13px 16px 13px 52px; position: relative; counter-increment: k; }
+.principles li::before { content: counter(k); position: absolute; left: 18px; top: 9px; font-family: var(--serif); font-size: 28px; font-weight: 600; color: #2A4A6E; }
+.principles b { font-family: var(--serif); font-size: 20px; display: block; }
+.principles span { font-size: 14.5px; line-height: 1.45; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <a class="brand" href="#" id="home" aria-label="Retour à l’accueil du jeu">
+      <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><polyline id="spiral" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"></polyline></svg>
+      <span>Révéla</span>
+    </a>
+    <span class="counter" id="counter" aria-live="polite"></span>
+  </header>
+  <div class="dots" id="dots" aria-hidden="true"></div>
+
+  <section class="screen intro on" id="s-intro" aria-labelledby="t-intro">
+    <h1 class="title" id="t-intro">Position<br><em>ou intérêt ?</em></h1>
+    <p class="lede">Ce qu’on réclame n’est que la partie visible. Dessous, il y a ce qui compte vraiment. Lisez la situation, trouvez l’intérêt caché, et découvrez la solution qu’il rend possible.</p>
+    <div class="mini-ice" aria-label="Exemple">
+      <div class="t"><small>Ce qu’il réclame</small>«&nbsp;Je veux que vous arrêtiez de tondre le matin&nbsp;!&nbsp;»</div>
+      <div class="b"><small>Ce qui compte vraiment</small>Pouvoir dormir après ses nuits de garde à l’hôpital.</div>
+    </div>
+    <p class="cycle" id="cycle"></p>
+    <div class="row"><button class="btn main" id="start">Commencer</button><button class="btn quiet" id="open-synth" hidden>Voir ma synthèse</button></div>
+    <p class="foot">D’après la négociation raisonnée de Roger Fisher et William Ury (<i>Getting to Yes</i>, 1981).</p>
+  </section>
+
+  <section class="screen" id="s-play" aria-label="Partie en cours">
+    <div class="ice">
+      <div class="above">
+        <p class="ctx" id="ctx"></p>
+        <p class="scene" id="scene"></p>
+        <span class="lab">Ce qui est réclamé</span>
+        <p class="pos" id="pos"></p>
+      </div>
+      <svg class="wave" viewBox="0 0 400 18" preserveAspectRatio="none" aria-hidden="true"><path d="M0,10 C40,0 60,18 100,9 C140,0 160,18 200,9 C240,0 260,18 300,9 C340,0 360,18 400,9 L400,18 L0,18 Z" fill="#2A4A6E"/></svg>
+      <div class="below">
+        <span class="lab">Ce qui compte vraiment</span>
+        <p class="int hidden" id="int">À vous de le trouver.</p>
+        <p class="sol" id="sol"></p>
+      </div>
+    </div>
+    <p class="ask">Quel intérêt se cache sous cette demande ?</p>
+    <div class="opts" id="opts"></div>
+    <div class="verdict" id="verdict" role="status">
+      <h2 id="v-title"></h2>
+      <p class="why" id="v-why"></p>
+      <button class="btn main" id="next">Situation suivante</button>
+    </div>
+  </section>
+
+  <section class="screen end" id="s-end" aria-labelledby="t-end">
+    <p class="score" id="score"></p>
+    <h2 class="read" id="t-end"></h2>
+    <p class="lesson" id="lesson"></p>
+    <div class="row">
+      <button class="btn main" id="to-synth" hidden>Découvrir ma synthèse</button>
+      <button class="btn main" id="again"></button>
+      <button class="btn quiet" id="share">Partager mon score</button>
+    </div>
+    <p class="toast" id="toast" role="status"></p>
+    <p class="foot">Un jeu Révéla, par SELARL DSP Avocats, Barreau de Nice. Jeu pédagogique, sans collecte de données : votre progression reste sur cet appareil. <a href="mailto:contact@dsp-avocats.fr">contact@dsp-avocats.fr</a> · <a href="/">Tous les outils et jeux Révéla</a> · <a href="/mentions-legales/">Mentions légales</a></p>
+  </section>
+
+  <section class="screen synth" id="s-synth" aria-labelledby="t-synth">
+    <h1 id="t-synth">Votre synthèse, après dix parties</h1>
+    <p class="lede" id="sy-score"></p>
+    <h2>Là où vous vous arrêtez</h2>
+    <ul class="bars" id="sy-bars"></ul>
+    <p class="lesson" id="sy-lesson"></p>
+    <h2>Ce qu’il faut retenir</h2>
+    <ol class="principles">
+      <li><b>Séparer les personnes du problème</b><span>On peut être ferme sur le fond et respectueux avec la personne.</span></li>
+      <li><b>Chercher l’intérêt sous la position</b><span>Demandez-vous : pourquoi est-ce si important pour lui ? Pour elle ? Pour moi ?</span></li>
+      <li><b>Inventer plusieurs options</b><span>Un même intérêt peut être satisfait de bien des façons, souvent sans que personne ne perde.</span></li>
+      <li><b>S’appuyer sur des critères objectifs</b><span>Un prix de marché, un devis, une règle : un repère que les deux parties peuvent accepter.</span></li>
+    </ol>
+    <p class="lesson"><b>Deux positions s’opposent ; deux intérêts se combinent souvent.</b>C’est tout le pari de l’amiable : sous « je veux » et « je refuse », chercher ce qui compte pour chacun, puis la solution qui respecte les deux.</p>
+    <div class="row">
+      <a class="btn main" id="sy-tool" href="#" hidden>Préparer ma négociation avec Le Pourparler</a>
+      <button class="btn quiet" id="restart">Recommencer dix parties</button>
+    </div>
+    <p class="foot">Repère : Roger Fisher et William Ury, <i>Getting to Yes</i> (1981), traduit en français sous le titre <i>Comment réussir une négociation</i>.</p>
+  </section>
+</div>
+
+<script>
+/* ——— réglages ——— */
+const TOOL_URL = "";   // lien du Pourparler, à renseigner au déploiement
+const SHARE_URL = location.href;
+const KEY = "revela-position-interet-v1";
+const ROUND = 5, GAMES = 10;
+
+/* ——— les pièges ——— */
+const TRAPS = {
+  position: ["Rester à la surface", "Cette réponse redit la demande, avec d’autres mots. L’intérêt, c’est la raison pour laquelle la demande compte."],
+  intention: ["Le procès d’intention", "Cette réponse prête une mauvaise intention. C’est le réflexe le plus naturel dans un conflit, et celui qui ferme le plus de portes."],
+  supposition: ["Le motif inventé", "Rien dans la situation ne l’indique. Fiez-vous aux indices, ou posez la question à l’intéressé."],
+};
+
+/* ——— les 50 situations ———
+   [contexte, situation (avec l’indice), position, intérêt, [piège, type], [piège, type], solution] */
+const DECK = [
+  ["Un voisinage", "Marc travaille de nuit à l’hôpital et dort de 8 h à 15 h. Sa chambre donne sur le jardin de Sophie.",
+    "Je veux que vous arrêtiez de tondre la pelouse le matin !", "Pouvoir dormir le matin, après ses nuits de travail.",
+    ["Que Sophie ne tonde plus jamais sa pelouse.", "position"], ["Montrer à Sophie qui commande dans le quartier.", "intention"],
+    "Sophie tond l’après-midi, après 15 h : la pelouse est entretenue, et Marc dort."],
+  ["Un chantier de cuisine", "Camille reçoit toute sa belle-famille dans trois semaines, pour les 80 ans de sa belle-mère. La cuisine n’est pas finie.",
+    "Je veux une remise de 30 % sur la facture.", "Avoir une cuisine utilisable avant la fête.",
+    ["Payer 30 % de moins.", "position"], ["Punir l’artisan pour son retard.", "intention"],
+    "L’artisan s’engage à finir sous quinze jours, avec un geste commercial modeste en cas de dépassement."],
+  ["Une succession", "Anne a passé toute son enfance dans la maison familiale. Ses enfants y ont passé toutes leurs vacances.",
+    "Je refuse de vendre la maison.", "Préserver un lieu de mémoire et de réunion familiale.",
+    ["Garder la maison, quoi qu’il arrive.", "position"], ["Empêcher son frère de toucher sa part.", "intention"],
+    "Anne rachète la part de son frère de façon échelonnée, ou la maison est louée l’année et réservée à la famille l’été."],
+  ["Le travail", "Nadia élève seule deux enfants ; l’école ferme à 17 h 30. Les réunions d’équipe viennent d’être déplacées à 17 h.",
+    "Je ne viendrai plus aux réunions.", "Récupérer ses enfants à l’heure, sans être mise à l’écart de l’équipe.",
+    ["Ne plus participer aux réunions.", "position"], ["Montrer à sa responsable qu’elle s’oppose à elle.", "supposition"],
+    "Les réunions reviennent à 14 h, ou Nadia y participe en visioconférence depuis chez elle."],
+  ["Un bail commercial", "Karim a perdu 20 % de son chiffre d’affaires depuis l’ouverture d’un centre commercial voisin. Sa librairie a douze ans.",
+    "Je refuse l’augmentation du loyer.", "Garder sa librairie viable pendant une période difficile.",
+    ["Continuer à payer le même loyer.", "position"], ["Faire perdre de l’argent à sa propriétaire.", "intention"],
+    "Une hausse étalée sur trois ans, en échange d’un renouvellement du bail sur une plus longue durée."],
+  ["Un fournisseur", "L’entreprise Alma a promis à son principal client une livraison complète avant la fin du mois. Il manque 10 cartons.",
+    "Nous ne paierons rien tant que tout n’est pas livré.", "Tenir son propre engagement envers son client.",
+    ["Ne rien payer avant la livraison complète.", "position"], ["Obtenir une remise en profitant de l’erreur.", "supposition"],
+    "Le fournisseur livre les 10 cartons en express à ses frais ; Alma règle tout de suite la partie déjà livrée."],
+  ["Une colocation", "Inès prépare un concours et révise tous les soirs dans sa chambre, qui donne sur le salon.",
+    "Je veux que plus personne ne vienne ici en semaine.", "Avoir du calme pour réviser le soir.",
+    ["Interdire toute visite en semaine.", "position"], ["Empêcher Jules de voir ses amis.", "intention"],
+    "Jusqu’au concours, les soirées en semaine se terminent à 22 h, et Jules reçoit plutôt le week-end."],
+  ["Une association", "Yves, trésorier, a été vivement critiqué l’an dernier pour un budget dépassé. Il en a été très affecté.",
+    "Je refuse de financer la fête annuelle.", "Ne plus être tenu pour responsable d’un dépassement de budget.",
+    ["Supprimer la fête annuelle.", "position"], ["Bloquer les projets de la présidente.", "intention"],
+    "Un budget plafonné, voté par le bureau, avec un point d’étape à mi-parcours."],
+  ["Une famille", "Le père des enfants vient de prendre un emploi qui le fait finir tard le vendredi.",
+    "Je veux récupérer les enfants le samedi au lieu du vendredi.", "Passer du temps avec ses enfants sans arriver épuisé et en retard.",
+    ["Changer le jour de la garde.", "position"], ["Réduire le temps de garde de la mère.", "intention"],
+    "Les enfants le rejoignent le samedi matin, et il les garde jusqu’au lundi matin en compensation."],
+  ["Une copropriété", "M. Leroy, retraité, vit d’une petite pension. Sa part du devis de ravalement s’élève à 18 000 €.",
+    "Je vote contre le ravalement.", "Pouvoir financer sa part sans mettre son budget en danger.",
+    ["Que le ravalement n’ait pas lieu.", "position"], ["Faire obstacle au conseil syndical.", "intention"],
+    "Des appels de fonds étalés dans le temps, ou des travaux réalisés par tranches."],
+  ["Une société", "Léa a apporté 80 % du capital de la société. Hugo, lui, gère les clients au quotidien.",
+    "Je veux décider seule des embauches.", "Protéger l’argent qu’elle a investi.",
+    ["Décider seule des recrutements.", "position"], ["Écarter Hugo de la société.", "intention"],
+    "Les embauches au-delà d’un certain coût se décident à deux ; Hugo garde la main en dessous."],
+  ["Un achat", "Ce client a acheté un canapé pour la naissance de son enfant, prévue dans dix jours. Le canapé est arrivé abîmé.",
+    "Je veux être remboursé, tout de suite.", "Avoir un canapé en état avant l’arrivée du bébé.",
+    ["Récupérer son argent immédiatement.", "position"], ["Faire payer au vendeur ses erreurs.", "intention"],
+    "Un échange contre un modèle en stock, livré sous une semaine."],
+  ["Le travail", "Thomas, excellent commercial, vient d’être approché par un concurrent. On ne lui a jamais proposé d’évolution.",
+    "Je veux une augmentation de 20 %.", "Être reconnu, et voir une perspective d’évolution.",
+    ["Gagner 20 % de plus.", "position"], ["Faire monter les enchères avant de partir, de toute façon.", "intention"],
+    "Une augmentation plus modeste et un poste de responsable d’équipe dans six mois, avec des objectifs écrits."],
+  ["Un bail", "Mme Duval a acheté l’appartement à crédit : le loyer rembourse ses mensualités. Son locataire a deux mois de retard.",
+    "Je veux que mon locataire parte.", "Percevoir un loyer régulier pour rembourser son prêt.",
+    ["Récupérer l’appartement.", "position"], ["Se débarrasser d’un locataire qu’elle n’apprécie pas.", "supposition"],
+    "Un échéancier pour l’arriéré, puis un prélèvement automatique à date fixe."],
+  ["Un voisinage", "La voisine de Paul vit seule depuis son veuvage. Son chien est sa seule compagnie. Il aboie tôt le matin.",
+    "Je ne me séparerai jamais de mon chien.", "Garder sa seule compagnie au quotidien.",
+    ["Garder le chien, quoi qu’on en dise.", "position"], ["Ignorer les plaintes du voisinage.", "intention"],
+    "Elle garde son chien, et un éducateur canin l’aide à réduire les aboiements du matin."],
+  ["Un chantier", "L’artisan a avancé 3 000 € de matériaux pour ce chantier et doit lui-même payer ses fournisseurs à la fin du mois.",
+    "Je ne reviens pas tant que vous ne m’avez pas payé.", "Ne pas mettre sa trésorerie en danger.",
+    ["Être payé avant de revenir.", "position"], ["Faire pression sur une cliente qu’il juge difficile.", "supposition"],
+    "La cliente règle le montant des matériaux ; le solde est payé à la fin du chantier."],
+  ["Une société", "Hugo veut lancer un nouveau projet et a besoin de liquidités rapidement.",
+    "Je veux vendre mes parts au double de leur valeur.", "Disposer rapidement de fonds pour son nouveau projet.",
+    ["Vendre ses parts au double.", "position"], ["S’enrichir sur le dos de Léa.", "intention"],
+    "Un rachat au prix d’expertise, payé en grande partie tout de suite, avec un complément si la société atteint ses objectifs."],
+  ["Une succession", "Paul n’a qu’un souvenir précis de son père : sa montre, qu’il portait chaque jour, et son bureau.",
+    "Je veux la moitié des meubles de la maison.", "Garder des objets qui portent la mémoire de son père.",
+    ["Obtenir la moitié des meubles.", "position"], ["Avoir autant que sa sœur, par principe.", "supposition"],
+    "Paul choisit en priorité les objets personnels de son père ; les autres meubles sont partagés selon leur valeur."],
+  ["Le travail", "Julie habite désormais à une heure et demie du bureau, et ses trajets lui coûtent cher.",
+    "Je veux trois jours de télétravail par semaine.", "Réduire la fatigue et le coût de ses trajets.",
+    ["Obtenir trois jours de télétravail.", "position"], ["Travailler moins sans le dire.", "intention"],
+    "Deux jours de télétravail et des horaires décalés pour éviter les heures de pointe."],
+  ["Une copropriété", "Le voisin du dessus a un bébé qui se réveille la nuit ; il marche pour le bercer.",
+    "Je refuse de mettre des tapis partout, je suis chez moi.", "S’occuper de son bébé la nuit sans être accusé de mauvaise volonté.",
+    ["Ne rien changer chez lui.", "position"], ["Ignorer la gêne de ses voisins.", "intention"],
+    "Un tapis dans la chambre du bébé seulement, et un mot aux voisins pour expliquer la situation."],
+  ["Une relation commerciale", "Ce client paie avec deux mois de retard depuis qu’il a perdu un gros contrat.",
+    "Nous voulons des délais de paiement à 90 jours.", "Traverser une période de trésorerie difficile.",
+    ["Payer à 90 jours.", "position"], ["Faire financer son activité par ses fournisseurs.", "intention"],
+    "Un échéancier temporaire de six mois, puis un retour aux délais habituels."],
+  ["Une colocation", "Jules travaille chez lui toute la journée, assis à son bureau, sans bouger.",
+    "Je veux 24 degrés dans l’appartement.", "Ne pas avoir froid en travaillant immobile.",
+    ["Chauffer à 24 degrés.", "position"], ["Faire payer le chauffage à sa colocataire.", "intention"],
+    "20 degrés dans l’appartement, et un petit radiateur d’appoint dans sa chambre, à sa charge."],
+  ["Une association", "Sami, bénévole, a perdu son emploi ; ses entretiens d’embauche tombent sans prévenir.",
+    "Je ne m’inscrirai plus aux permanences.", "Continuer à aider sans s’engager sur des horaires qu’il ne peut pas tenir.",
+    ["Ne plus faire de permanences.", "position"], ["Quitter discrètement l’association.", "supposition"],
+    "Sami devient bénévole de renfort, appelé la veille selon ses disponibilités."],
+  ["Une famille", "Lucie vit à 500 km de leur père. Son frère, qui habite à côté, assure seul tous les rendez-vous médicaux.",
+    "Je veux que Lucie revienne s’installer près de papa.", "Ne plus porter seul la charge de leur père.",
+    ["Que Lucie déménage.", "position"], ["Culpabiliser sa sœur.", "intention"],
+    "Lucie finance une aide à domicile et prend le relais deux semaines par an ; son frère souffle."],
+  ["Une vente", "L’acheteur a besoin de sa voiture pour aller travailler ; il n’a pas les moyens d’en racheter une.",
+    "Je veux l’annulation de la vente.", "Disposer d’un véhicule fiable pour aller travailler.",
+    ["Annuler la vente.", "position"], ["Récupérer son argent pour l’utiliser autrement.", "supposition"],
+    "Le vendeur prend en charge la réparation de la boîte de vitesses, et l’acheteur garde la voiture."],
+  ["Une copropriété", "Le syndic gère quarante immeubles et reçoit des centaines de demandes par semaine.",
+    "Nous ne traitons les demandes que par lettre recommandée.", "Suivre toutes les demandes sans en perdre aucune.",
+    ["N’accepter que les recommandés.", "position"], ["Décourager les copropriétaires de se plaindre.", "intention"],
+    "Un formulaire en ligne avec accusé de réception et numéro de suivi."],
+  ["Le travail", "Le restaurant réalise la moitié de son chiffre d’affaires en août.",
+    "Personne ne prend de congés en août.", "Faire tourner le restaurant pendant la saison.",
+    ["Interdire les congés en août.", "position"], ["Empêcher les salariés de partir en vacances.", "intention"],
+    "Une rotation : chacun prend une semaine en août à tour de rôle, et le reste en septembre."],
+  ["Un abonnement", "Mme Garcia, 82 ans, ne se souvient pas avoir souscrit cet abonnement et ne comprend pas son relevé.",
+    "Je veux porter plainte contre cette société.", "Être remboursée, et ne plus être prélevée.",
+    ["Porter plainte.", "position"], ["Faire fermer la société.", "intention"],
+    "Une résiliation immédiate, le remboursement des prélèvements contestés, et l’aide d’un proche pour vérifier ses comptes."],
+  ["Un voisinage", "Le grand chêne a été planté par le grand-père de M. Blanc, il y a soixante ans.",
+    "Je refuse que l’on touche à cet arbre.", "Préserver un arbre chargé d’histoire familiale.",
+    ["Ne pas toucher à l’arbre.", "position"], ["Ignorer les problèmes de son voisin.", "intention"],
+    "Un élagage léger des seules branches qui débordent, confié à un arboriste qui préserve l’arbre."],
+  ["Une société", "Hugo s’occupe de son père malade deux jours par semaine depuis trois mois.",
+    "Je veux travailler trois jours par semaine.", "Concilier la société et l’aide à son père.",
+    ["Ne travailler que trois jours.", "position"], ["Se reposer pendant que son associée travaille.", "intention"],
+    "Une répartition des tâches revue pour six mois, et une rémunération ajustée au temps passé."],
+  ["Un bail", "Le locataire doit verser, la semaine prochaine, le dépôt de garantie de son nouveau logement.",
+    "Je veux toute ma caution, tout de suite.", "Pouvoir payer le dépôt de son nouveau logement.",
+    ["Récupérer toute sa caution immédiatement.", "position"], ["Ne pas payer les petites réparations.", "supposition"],
+    "La bailleresse restitue tout de suite la part non contestée, et les deux discutent du reste."],
+  ["Un club sportif", "La fille de M. Morel s’entraîne trois fois par semaine et rêve d’intégrer l’équipe régionale.",
+    "Je veux qu’elle soit titulaire à chaque match.", "Que sa fille progresse et garde sa motivation.",
+    ["Qu’elle joue tous les matchs.", "position"], ["Que l’entraîneur cède devant lui.", "intention"],
+    "Un temps de jeu régulier et un objectif de progression écrit, fixé avec l’entraîneur."],
+  ["Une administration", "M. Diallo doit justifier sa situation avant la fin du mois pour conserver son allocation.",
+    "Je veux parler au directeur.", "Que son dossier soit traité avant l’échéance.",
+    ["Obtenir un rendez-vous avec le directeur.", "position"], ["Se plaindre de l’agent qui le reçoit.", "supposition"],
+    "Un rendez-vous prioritaire avec un agent qui confirme, par écrit, la liste des pièces à fournir."],
+  ["Un bail commercial", "Mme Duval prend sa retraite l’an prochain ; ses loyers seront son principal revenu.",
+    "Je veux augmenter le loyer de 27 %.", "S’assurer un revenu stable pour sa retraite.",
+    ["Obtenir 27 % de hausse.", "position"], ["Pousser le libraire à partir.", "intention"],
+    "Une hausse progressive et un bail plus long, qui lui garantit des loyers sûrs pendant des années."],
+  ["Un client", "Le client présente le projet à son conseil d’administration dans un mois.",
+    "Je veux que vous ajoutiez ces trois fonctions, sans supplément.", "Avoir un projet convaincant pour la réunion du conseil.",
+    ["Obtenir trois fonctions gratuites.", "position"], ["Profiter de son prestataire.", "intention"],
+    "Une fonction prioritaire prête pour le conseil ; les deux autres chiffrées pour une seconde phase."],
+  ["Une copropriété", "M. Roux, âgé, ne peut plus descendre les escaliers ; il prend l’ascenseur avec son chien.",
+    "Je refuse qu’on m’interdise l’ascenseur.", "Pouvoir sortir son chien malgré ses difficultés à marcher.",
+    ["Garder l’accès à l’ascenseur.", "position"], ["Ne pas se soucier de la propreté.", "intention"],
+    "Il garde l’ascenseur, avec un tapis absorbant dans la cabine et un nettoyage rapide en cas d’incident."],
+  ["Le travail", "La directrice part chaque jour à 16 h 30 chercher ses enfants, et termine son travail le soir.",
+    "Je veux que l’équipe réponde à mes mails le soir.", "Faire avancer les dossiers malgré ses horaires décalés.",
+    ["Recevoir des réponses le soir.", "position"], ["Contrôler la disponibilité de son équipe.", "intention"],
+    "Elle programme l’envoi de ses mails pour 8 h le lendemain, et un point d’équipe se tient chaque jour à 9 h."],
+  ["Un ami", "Antoine a prêté 500 € à un ami ; il doit lui-même payer une réparation urgente sur sa voiture.",
+    "Je veux mes 500 € cette semaine.", "Faire face à sa propre dépense urgente.",
+    ["Être remboursé cette semaine.", "position"], ["Tester son amitié.", "supposition"],
+    "Son ami lui rend 250 € tout de suite, et le reste à la fin du mois."],
+  ["Un voisinage", "Les voisins voient peu leur famille ; le barbecue du dimanche est leur moment de réunion.",
+    "Nous ne renoncerons pas à notre barbecue.", "Préserver les repas de famille du dimanche.",
+    ["Garder le barbecue.", "position"], ["Ne pas se soucier des voisins.", "intention"],
+    "Le barbecue est déplacé au fond du jardin, côté rue, et les voisins sont prévenus des dates."],
+  ["Une assurance", "Après un dégât des eaux, la famille Lambert vit dans deux pièces sur cinq.",
+    "Je veux que l’assurance paie tout, immédiatement.", "Retrouver rapidement un logement habitable.",
+    ["Être indemnisé de tout, tout de suite.", "position"], ["Obtenir le maximum de l’assurance.", "intention"],
+    "Une avance pour les travaux urgents, puis une expertise pour le reste."],
+  ["Une colocation", "Le compagnon d’Inès a perdu son logement le mois dernier et cherche un appartement.",
+    "Il restera ici autant qu’il le faudra.", "Aider son compagnon pendant une période difficile.",
+    ["Que son compagnon reste sans limite de temps.", "position"], ["Imposer sa présence à son colocataire.", "intention"],
+    "Il reste deux mois au plus, et participe aux charges pendant ce temps."],
+  ["Une association", "La présidente a organisé la sortie seule : les places devaient être réservées sous 48 heures.",
+    "Je n’ai pas à consulter tout le monde pour chaque sortie.", "Pouvoir réagir vite quand une occasion se présente.",
+    ["Décider seule des sorties.", "position"], ["Écarter certains membres.", "intention"],
+    "Le bureau vote une règle : en cas d’urgence, la présidente décide et informe tout le monde dans la journée."],
+  ["Le travail", "Marc veut suivre une formation de six mois, le soir, qui l’oblige à partir à 17 h.",
+    "Je veux partir à 17 h tous les jours.", "Suivre sa formation pour évoluer.",
+    ["Partir à 17 h chaque jour.", "position"], ["Travailler moins que ses collègues.", "intention"],
+    "Il arrive plus tôt le matin pendant six mois, et sa formation est reconnue par l’entreprise."],
+  ["Un garage", "Mme Petit est infirmière à domicile : sans voiture, elle ne peut pas voir ses patients.",
+    "Je veux un véhicule de prêt tant que le mien n’est pas réparé.", "Pouvoir continuer ses tournées.",
+    ["Obtenir un véhicule de prêt.", "position"], ["Profiter de la situation.", "intention"],
+    "Une réparation prioritaire sous 48 heures, ou un véhicule de remplacement pendant ce délai."],
+  ["Une société", "Léa doit présenter les comptes à la banque dans un mois pour obtenir un prêt.",
+    "Je veux un accès direct à la comptabilité, sans passer par toi.", "Disposer des chiffres à temps pour le prêt.",
+    ["Accéder seule à la comptabilité.", "position"], ["Surveiller son associé.", "intention"],
+    "Un accès en lecture au logiciel comptable pour les deux associés, et une revue mensuelle commune."],
+  ["Une succession", "La maison, inoccupée depuis le décès, a été cambriolée l’an dernier. Anne a emporté les bijoux.",
+    "Les bijoux restent chez moi.", "Protéger les bijoux d’un nouveau vol.",
+    ["Garder les bijoux chez elle.", "position"], ["S’approprier les bijoux.", "intention"],
+    "Les bijoux sont déposés dans un coffre, au nom de la succession, jusqu’au partage."],
+  ["Une copropriété", "M. Faure, ancien artisan du bâtiment, a repéré dans le devis des postes qu’il juge surestimés.",
+    "Je veux un nouvel appel d’offres.", "Ne pas payer les travaux plus cher que leur juste prix.",
+    ["Relancer un appel d’offres.", "position"], ["Retarder les travaux.", "intention"],
+    "Deux devis supplémentaires, comparés poste par poste avant le vote."],
+  ["Une famille", "Les parents de Thomas sont âgés et ne peuvent plus voyager.",
+    "Les fêtes se feront chez mes parents, comme d’habitude.", "Passer les fêtes avec des parents qui ne peuvent plus se déplacer.",
+    ["Fêter Noël chez ses parents.", "position"], ["Imposer sa famille à sa compagne.", "intention"],
+    "Noël chez ses parents, le Nouvel An dans la famille de sa compagne, et l’on en reparle chaque année."],
+  ["Le travail", "Paul vient d’arriver dans l’équipe et craint que ses idées passent inaperçues.",
+    "Je dois pouvoir intervenir dès que j’ai une idée.", "Que ses idées soient entendues et reconnues.",
+    ["Intervenir quand il le souhaite.", "position"], ["Prendre le pouvoir en réunion.", "intention"],
+    "Un tour de table à chaque réunion, où chacun présente ses idées sans être interrompu."],
+  ["Une vente immobilière", "Les vendeurs ont signé l’achat de leur nouvelle maison, à payer le 15 janvier.",
+    "Nous refusons de baisser le prix, même pour la toiture.", "Disposer de la somme nécessaire au 15 janvier.",
+    ["Ne rien céder sur le prix.", "position"], ["Profiter de l’empressement de l’acheteur.", "intention"],
+    "Le prix est maintenu ; les vendeurs font réparer la toiture avant la vente, payée sur le prix à la signature."],
+];
+
+/* ——— utilitaires ——— */
+const $ = (id) => document.getElementById(id);
+const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const load = () => { try { return JSON.parse(localStorage.getItem(KEY) || "null"); } catch { return null; } };
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* indisponible */ } };
+const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+(function spiral() {
+  const p = []; for (let i = 0; i <= 140; i++) { const t = i / 140, th = t * 3.4 * 2 * Math.PI, r = t * 10.5;
+    p.push(`${(12 + r * Math.cos(th - Math.PI / 2)).toFixed(2)},${(12 + r * Math.sin(th - Math.PI / 2)).toFixed(2)}`); }
+  $("spiral").setAttribute("points", p.join(" "));
+})();
+
+const newCycle = () => ({ order: shuffle([...DECK.keys()]), game: 0, st: { ok: 0, n: 0, traps: {} } });
+let S = load() || { best: null, cycle: newCycle() };
+if (!S.cycle) S.cycle = newCycle();
+let round = [], idx = 0, answers = [], locked = false, opts = [];
+
+function show(id) {
+  ["s-intro", "s-play", "s-end", "s-synth"].forEach((s) => $(s).classList.toggle("on", s === id));
+  $("dots").style.display = id === "s-play" ? "flex" : "none";
+  if (id !== "s-play") $("counter").textContent = "";
+  window.scrollTo(0, 0);
+}
+function refreshIntro() {
+  const g = S.cycle.game;
+  $("cycle").innerHTML = g >= GAMES ? "Vos dix parties sont terminées : votre synthèse est prête."
+    : g === 0 ? "Dix parties de cinq situations : cinquante demandes à sonder, jamais deux fois la même."
+    : `Partie <b>${g + 1}</b> sur ${GAMES}. Encore ${GAMES - g} avant votre synthèse.`;
+  $("start").textContent = g >= GAMES ? "Recommencer dix parties" : g === 0 ? "Commencer" : `Jouer la partie ${g + 1}`;
+  $("open-synth").hidden = g < GAMES;
+}
+
+function newGame() {
+  if (S.cycle.game >= GAMES) { S.cycle = newCycle(); save(); }
+  const g = S.cycle.game;
+  round = S.cycle.order.slice(g * ROUND, g * ROUND + ROUND).map((i) => DECK[i]);
+  idx = 0; answers = [];
+  $("dots").innerHTML = round.map(() => "<i></i>").join("");
+  show("s-play"); deal();
+}
+
+function deal() {
+  locked = false;
+  const c = round[idx];
+  $("ctx").textContent = c[0];
+  $("scene").textContent = c[1];
+  $("pos").textContent = `«\u00a0${c[2]}\u00a0»`;
+  $("int").textContent = "À vous de le trouver."; $("int").classList.add("hidden");
+  $("sol").classList.remove("on");
+  opts = shuffle([{ t: c[3], good: true }, { t: c[4][0], trap: c[4][1] }, { t: c[5][0], trap: c[5][1] }]);
+  $("opts").innerHTML = opts.map((o, i) => `<button class="opt" data-i="${i}" data-l="${"ABC"[i]}">${esc(o.t)}</button>`).join("");
+  $("verdict").classList.remove("on");
+  $("counter").innerHTML = `Partie ${S.cycle.game + 1}, situation <strong>${idx + 1}</strong> sur ${ROUND}`;
+  [...$("dots").children].forEach((d, i) => d.classList.toggle("now", i === idx));
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function choose(i) {
+  if (locked) return; locked = true;
+  const o = opts[i], c = round[idx];
+  answers.push({ ok: !!o.good, trap: o.trap || null });
+  $("opts").querySelectorAll(".opt").forEach((b, k) => { b.disabled = true; b.classList.add(opts[k].good ? "good" : k === i ? "bad" : "dim"); });
+  $("dots").children[idx].className = o.good ? "ok" : "ko";
+  $("int").textContent = c[3]; $("int").classList.remove("hidden");
+  $("sol").innerHTML = `<b>Une solution possible :</b> ${esc(c[6])}`; $("sol").classList.add("on");
+  $("v-title").textContent = o.good ? "Oui : voilà ce qui compte vraiment." : `Non : ${TRAPS[o.trap][0].toLowerCase()}.`;
+  $("v-why").textContent = o.good ? "Les indices de la situation le montrent. Et une fois l’intérêt trouvé, une solution apparaît, qui ne passe pas forcément par la demande de départ." : TRAPS[o.trap][1];
+  $("verdict").style.setProperty("--v", o.good ? "var(--ok)" : "var(--ko)");
+  $("next").textContent = idx === ROUND - 1 ? "Voir mon résultat" : "Situation suivante";
+  $("verdict").classList.add("on");
+  setTimeout(() => { $("verdict").scrollIntoView({ behavior: "smooth", block: "nearest" }); $("next").focus({ preventScroll: true }); }, 60);
+}
+function next() { if (idx < ROUND - 1) { idx++; deal(); } else finish(); }
+
+const ADVICE = {
+  position: ["Vous restez souvent à la surface.", "Vous reformulez la demande au lieu de chercher ce qui la motive. Posez-vous une seule question : pourquoi est-ce si important pour cette personne ?"],
+  intention: ["Vous prêtez volontiers de mauvaises intentions.", "C’est le réflexe le plus naturel quand on est en conflit, et le plus coûteux : une fois l’autre jugé, on ne cherche plus de solution avec lui."],
+  supposition: ["Vous inventez parfois un motif.", "Fiez-vous aux indices que donne la situation. Et dans la réalité, quand ils manquent : posez la question."],
+};
+const lessonFor = (traps) => {
+  const top = Object.entries(traps).sort((a, b) => b[1] - a[1])[0];
+  return top ? ADVICE[top[0]] : ["Vous voyez sous la surface.", "Sous chaque demande, vous trouvez ce qui compte vraiment. C’est la compétence clé de toute négociation amiable."];
+};
+
+function finish() {
+  const ok = answers.filter((a) => a.ok).length;
+  if (!(S.best >= ok)) S.best = ok;
+  const st = S.cycle.st, traps = {};
+  answers.forEach((a) => { st.n++; if (a.ok) st.ok++; else { traps[a.trap] = (traps[a.trap] || 0) + 1; st.traps[a.trap] = (st.traps[a.trap] || 0) + 1; } });
+  S.cycle.game++; save();
+  const last = S.cycle.game >= GAMES;
+  $("score").innerHTML = `${ok}<small> / ${ROUND}</small>`;
+  $("t-end").textContent = ok === ROUND ? "Cinq demandes, cinq intérêts trouvés." : ok >= 3 ? "Vous voyez souvent ce qui se cache sous la demande." : "La surface est trompeuse : c’est précisément ce que ce jeu entraîne.";
+  const L = lessonFor(traps);
+  $("lesson").innerHTML = `<b>${L[0]}</b>${L[1]}`;
+  $("to-synth").hidden = !last; $("again").hidden = last;
+  $("again").textContent = `Partie suivante (${S.cycle.game + 1} sur ${GAMES})`;
+  $("toast").textContent = last ? "Dix parties terminées : votre synthèse est prête." : "";
+  show("s-end"); (last ? $("to-synth") : $("again")).focus({ preventScroll: true });
+}
+
+function synthesis() {
+  const st = S.cycle.st;
+  $("sy-score").textContent = `${st.ok} intérêts trouvés sur ${st.n}.`;
+  const max = Math.max(1, ...Object.values(st.traps));
+  $("sy-bars").innerHTML = Object.keys(TRAPS).map((k) => {
+    const v = st.traps[k] || 0;
+    return `<li><span>${TRAPS[k][0]}</span><span class="tr"><span style="width:${(100 * v) / max}%"></span></span><span class="v">${v}</span></li>`;
+  }).join("");
+  const L = lessonFor(st.traps);
+  $("sy-lesson").innerHTML = `<b>${L[0]}</b>${L[1]}`;
+  if (TOOL_URL) { $("sy-tool").href = TOOL_URL; $("sy-tool").hidden = false; }
+  show("s-synth");
+}
+
+async function share() {
+  const ok = answers.filter((a) => a.ok).length;
+  const txt = `J’ai trouvé ${ok} intérêts cachés sur ${ROUND} dans « Position ou intérêt ? », le jeu Révéla. Et vous, voyez-vous sous la surface ?`;
+  try {
+    if (navigator.share) { await navigator.share({ title: "Position ou intérêt ?", text: txt, url: SHARE_URL }); return; }
+    await navigator.clipboard.writeText(`${txt} ${SHARE_URL}`);
+    $("toast").textContent = "Texte copié : collez-le où vous voulez.";
+  } catch (e) {
+    if (e && e.name === "AbortError") return;
+    $("toast").textContent = "Partage indisponible ici. Faites une capture d’écran de votre score.";
+  }
+}
+
+$("opts").addEventListener("click", (e) => { const b = e.target.closest(".opt"); if (b && !b.disabled) choose(+b.dataset.i); });
+$("start").onclick = newGame; $("again").onclick = newGame; $("next").onclick = next; $("share").onclick = share;
+$("to-synth").onclick = synthesis; $("open-synth").onclick = synthesis;
+$("restart").onclick = () => { S.cycle = newCycle(); save(); refreshIntro(); show("s-intro"); };
+$("home").onclick = (e) => { e.preventDefault(); refreshIntro(); show("s-intro"); };
+document.addEventListener("keydown", (e) => {
+  if (!$("s-play").classList.contains("on")) return;
+  const k = { a: 0, b: 1, c: 2, "1": 0, "2": 1, "3": 2 }[e.key.toLowerCase()];
+  if (k !== undefined && !locked) { e.preventDefault(); choose(k); }
+  else if ((e.key === "Enter" || e.key === " ") && locked && document.activeElement !== $("next")) { e.preventDefault(); next(); }
+});
+refreshIntro(); show("s-intro");
+</script>
+</body>
+</html>

@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="description" content="L’escalier du conflit — un jeu Révéla, par DSP Avocats. Placez chaque scène sur la bonne marche de l’escalade d’un conflit." />
+<meta name="theme-color" content="#0E1A2F" />
+<title>L’escalier du conflit — un jeu Révéla</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400;1,500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --table: #0E1A2F; --table-2: #15253F; --card: #F6F0E3; --card-edge: #E4D9C3;
+  --ink: #1B2A4A; --muted: #6E6A5E; --gold: #C9A45C; --gold-soft: #E2C88F; --cream: #F3ECDD; --dim: #9EA6B6;
+  --z1: #8DB07A; --z2: #D9AE5F; --z3: #D0675B; --ok: #8DB07A; --near: #D9AE5F; --ko: #D0675B;
+  --serif: "Cormorant Garamond", Garamond, "Times New Roman", serif; --sans: "DM Sans", "Helvetica Neue", Arial, sans-serif;
+  box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+:root:not([data-theme="light"]) { color-scheme: dark; }
+*, *::before, *::after { box-sizing: inherit; }
+html, body { min-height: 100%; }
+body { margin: 0; background: radial-gradient(120% 80% at 50% 25%, var(--table-2), var(--table) 70%) fixed var(--table);
+  color: var(--cream); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; cursor: pointer; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.app { max-width: 520px; margin: 0 auto; padding: 16px 20px 24px; min-height: 100vh; display: flex; flex-direction: column; }
+.top { display: flex; align-items: center; justify-content: space-between; min-height: 40px; }
+.brand { display: inline-flex; align-items: center; gap: 9px; color: var(--cream); text-decoration: none; }
+.brand svg { color: var(--gold); }
+.brand span { font-family: var(--serif); font-size: 21px; font-weight: 600; letter-spacing: .08em; }
+.counter { font-size: 14px; color: #B9BFCC; text-align: right; }
+.counter strong { color: var(--cream); font-weight: 600; }
+.screen { display: none; flex-direction: column; flex: 1; }
+.screen.on { display: flex; }
+.btn { border: 1px solid var(--cream); background: transparent; border-radius: 999px; padding: 14px 26px; font-size: 16px; font-weight: 500; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
+.btn.main { background: var(--gold); border-color: var(--gold); color: var(--table); font-weight: 600; }
+.btn.main:hover { background: var(--gold-soft); }
+.btn.quiet { border-color: rgba(243,236,221,.35); }
+.btn.quiet:hover { border-color: var(--cream); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+.lede { margin: 0; font-size: 16px; line-height: 1.55; color: #D8D3C6; max-width: 34em; }
+.foot { font-size: 12px; color: #8D95A6; line-height: 1.5; margin: 8px 0 0; }
+.foot a { color: #B9BFCC; }
+
+/* ——— l’escalier : l’élément signature ——— */
+.stair { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column-reverse; gap: 5px; }
+.stair li { padding-left: calc((var(--n) - 1) * 3.6%); }
+.step { width: 100%; display: grid; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: center; text-align: left;
+  border: 1px solid rgba(243,236,221,.14); border-left: 3px solid var(--z); background: rgba(243,236,221,.05);
+  border-radius: 4px 10px 10px 4px; padding: 7px 12px 7px 9px; min-height: 42px; transition: background .15s, border-color .15s, transform .15s; }
+.step .num { font-family: var(--serif); font-size: 22px; font-weight: 600; color: var(--z); text-align: center; line-height: 1; }
+.step .nm { font-size: 14px; color: var(--cream); line-height: 1.25; }
+.step .pins { display: flex; gap: 3px; }
+.step .pins i { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); }
+.step:hover:not(:disabled) { background: rgba(243,236,221,.11); transform: translateX(2px); }
+.step:disabled { cursor: default; }
+.step.mine { border-color: var(--cream); background: rgba(243,236,221,.14); }
+.step.truth { background: color-mix(in srgb, var(--z) 26%, transparent); border-color: var(--z); }
+.zone-tag { font-size: 12px; color: var(--dim); margin: 2px 0 6px calc(var(--n) * 3.6%); }
+
+/* accueil */
+.intro { gap: 20px; padding: 14px 0; }
+.title { font-family: var(--serif); font-weight: 500; font-size: clamp(48px, 13vw, 64px); line-height: .98; margin: 0; }
+.title em { font-style: italic; color: var(--gold-soft); font-weight: 400; }
+.mini .step { min-height: 34px; padding: 4px 10px 4px 8px; }
+.mini .step .num { font-size: 18px; } .mini .step .nm { font-size: 13px; }
+.zones { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.zones li { display: grid; grid-template-columns: 14px 1fr; gap: 10px; align-items: baseline; font-size: 15px; color: #D8D3C6; line-height: 1.45; }
+.zones i { width: 10px; height: 10px; border-radius: 2px; background: var(--z); transform: translateY(1px); }
+.zones b { color: var(--cream); font-weight: 600; }
+.cycle { font-size: 14px; color: #B9BFCC; margin: 0; } .cycle b { color: var(--cream); }
+
+/* jeu */
+.scene { background: var(--card); color: var(--ink); border-radius: 18px; padding: 18px 20px 16px; margin: 12px 0 14px;
+  box-shadow: 0 18px 46px rgba(0,0,0,.38), inset 0 0 0 1px var(--card-edge); transition: transform .25s, opacity .25s; }
+.scene .story { margin: 0 0 6px; font-size: 13px; color: var(--muted); }
+.scene p.txt { margin: 0; font-family: var(--serif); font-size: clamp(22px, 6vw, 26px); line-height: 1.28; font-weight: 500; }
+.ask { margin: 0 0 8px; font-size: 13.5px; color: var(--dim); }
+.sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; display: none; padding: 0 12px calc(12px + env(safe-area-inset-bottom, 0px)); }
+.sheet.on { display: block; animation: up .22s ease-out; }
+.sheet .in { max-width: 500px; margin: 0 auto; background: #1C2D4A; border: 1px solid rgba(243,236,221,.16); border-top: 3px solid var(--v); border-radius: 18px; padding: 16px 18px; box-shadow: 0 -10px 40px rgba(0,0,0,.45); }
+.sheet h2 { margin: 0 0 4px; font-family: var(--serif); font-size: 24px; font-weight: 600; }
+.sheet .desc { margin: 0 0 6px; font-size: 15px; line-height: 1.5; color: #E2DDD1; }
+.sheet .zl { margin: 0 0 12px; font-size: 13.5px; color: var(--dim); }
+.sheet .btn { padding: 11px 20px; font-size: 15px; }
+@keyframes up { from { transform: translateY(20px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* fin de partie */
+.end { gap: 16px; padding: 10px 0 20px; }
+.score { font-family: var(--serif); font-size: 84px; line-height: .9; margin: 6px 0 0; font-weight: 500; }
+.score small { font-size: 30px; color: var(--dim); }
+.read { font-family: var(--serif); font-size: 23px; line-height: 1.3; margin: 0; }
+.story-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.story-list li { display: grid; grid-template-columns: 34px 1fr 22px; gap: 10px; padding: 10px 12px; border-radius: 12px; background: rgba(243,236,221,.05); border-left: 3px solid var(--z); }
+.story-list .n { font-family: var(--serif); font-size: 22px; color: var(--z); font-weight: 600; line-height: 1.1; }
+.story-list .t { font-size: 14.5px; line-height: 1.45; color: #E2DDD1; }
+.story-list .t small { display: block; color: var(--dim); font-size: 12.5px; margin-bottom: 2px; }
+.story-list .m { font-size: 15px; text-align: right; }
+.pivot { margin: 0; padding: 14px 16px; border-radius: 14px; background: var(--card); color: var(--ink); font-size: 15px; line-height: 1.5; }
+.pivot b { font-family: var(--serif); font-size: 19px; display: block; margin-bottom: 2px; }
+.toast { min-height: 18px; font-size: 13.5px; color: var(--gold-soft); margin: 0; }
+
+/* synthèse */
+.synth { gap: 16px; padding: 8px 0 20px; }
+.synth h1 { font-family: var(--serif); font-weight: 500; font-size: clamp(36px, 10vw, 46px); line-height: 1.02; margin: 4px 0 0; }
+.synth h2 { font-family: var(--serif); font-weight: 600; font-size: 25px; margin: 8px 0 0; }
+.bars { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.bars li { display: grid; grid-template-columns: 128px 1fr 44px; gap: 12px; align-items: center; font-size: 14.5px; color: #D8D3C6; }
+.bars .tr { height: 6px; border-radius: 3px; background: rgba(243,236,221,.12); overflow: hidden; }
+.bars .tr span { display: block; height: 100%; border-radius: 3px; }
+.bars .v { text-align: right; color: var(--cream); font-weight: 600; }
+.gauge { position: relative; height: 54px; margin: 6px 0 0; }
+.gauge .axis { position: absolute; left: 0; right: 0; top: 22px; height: 2px; background: rgba(243,236,221,.2); }
+.gauge .mid { position: absolute; left: 50%; top: 12px; width: 2px; height: 22px; background: var(--cream); }
+.gauge .dot { position: absolute; top: 14px; width: 18px; height: 18px; margin-left: -9px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 4px rgba(201,164,92,.25); }
+.gauge .lab { position: absolute; top: 38px; font-size: 12px; color: var(--dim); }
+.gauge .lab.l { left: 0; } .gauge .lab.r { right: 0; } .gauge .lab.c { left: 50%; transform: translateX(-50%); }
+.zcard { background: var(--card); color: var(--ink); border-radius: 16px; padding: 14px 18px; border-left: 5px solid var(--z); }
+.zcard h3 { margin: 0 0 2px; font-family: var(--serif); font-size: 22px; font-weight: 600; }
+.zcard p { margin: 0; font-size: 15px; line-height: 1.5; }
+.zcard .help { margin-top: 6px; font-size: 14px; color: #4A4F60; }
+.signals { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.signals li { padding: 11px 14px; border-left: 2px solid var(--gold); background: rgba(243,236,221,.05); font-size: 15px; line-height: 1.5; color: #DCD7CB; }
+.signals b { color: var(--cream); }
+
+@media (prefers-reduced-motion: reduce) { .sheet.on { animation: none; } .step, .scene { transition: none; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <a class="brand" href="#" id="home" aria-label="Retour à l’accueil du jeu">
+      <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><polyline id="spiral" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"></polyline></svg>
+      <span>Révéla</span>
+    </a>
+    <span class="counter" id="counter" aria-live="polite"></span>
+  </header>
+
+  <!-- accueil -->
+  <section class="screen intro on" id="s-intro" aria-labelledby="t-intro">
+    <h1 class="title" id="t-intro">L’escalier<br><em>du conflit</em></h1>
+    <p class="lede">Un conflit ne bascule pas d’un coup : il monte, marche après marche. Dix histoires, neuf scènes chacune, mélangées. À vous de placer chaque scène sur la bonne marche.</p>
+    <ol class="stair mini" id="mini" aria-hidden="true"></ol>
+    <ul class="zones">
+      <li style="--z: var(--z1)"><i></i><span><b>Marches 1 à 3.</b> Chacun peut encore y gagner : un échange suffit souvent.</span></li>
+      <li style="--z: var(--z2)"><i></i><span><b>Marches 4 à 6.</b> L’un veut gagner contre l’autre : un tiers devient utile.</span></li>
+      <li style="--z: var(--z3)"><i></i><span><b>Marches 7 à 9.</b> Tout le monde y perd : la décision vient souvent de l’extérieur.</span></li>
+    </ul>
+    <p class="cycle" id="cycle"></p>
+    <div class="row"><button class="btn main" id="start">Commencer</button><button class="btn quiet" id="open-synth" hidden>Voir ma synthèse</button></div>
+    <p class="foot">D’après le modèle d’escalade des conflits de Friedrich Glasl (1980).</p>
+  </section>
+
+  <!-- jeu -->
+  <section class="screen" id="s-play" aria-label="Partie en cours">
+    <article class="scene" id="scene" tabindex="-1">
+      <p class="story" id="story"></p>
+      <p class="txt" id="txt"></p>
+    </article>
+    <p class="ask">Sur quelle marche se situe cette scène ? Touchez la marche, ou tapez son numéro.</p>
+    <ol class="stair" id="stair"></ol>
+  </section>
+
+  <!-- fin de partie -->
+  <section class="screen end" id="s-end" aria-labelledby="t-end">
+    <p class="score" id="score"></p>
+    <h2 class="read" id="t-end"></h2>
+    <p class="pivot" id="pivot"></p>
+    <ol class="story-list" id="story-list"></ol>
+    <div class="row">
+      <button class="btn main" id="to-synth" hidden>Découvrir ma synthèse</button>
+      <button class="btn main" id="again"></button>
+      <button class="btn quiet" id="share">Partager mon score</button>
+    </div>
+    <p class="toast" id="toast" role="status"></p>
+    <p class="foot">Un jeu Révéla, par SELARL DSP Avocats, Barreau de Nice. Jeu pédagogique, sans collecte de données : votre progression reste sur cet appareil. <a href="mailto:contact@dsp-avocats.fr">contact@dsp-avocats.fr</a> · <a href="/">Tous les outils et jeux Révéla</a> · <a href="/mentions-legales/">Mentions légales</a></p>
+  </section>
+
+  <!-- synthèse -->
+  <section class="screen synth" id="s-synth" aria-labelledby="t-synth">
+    <h1 id="t-synth">Votre synthèse, après dix histoires</h1>
+    <p class="lede" id="sy-score"></p>
+    <ul class="bars" id="sy-bars"></ul>
+    <h2>Votre regard sur l’escalade</h2>
+    <div class="gauge" id="gauge" aria-hidden="true"><div class="axis"></div><div class="mid"></div><div class="dot" id="g-dot"></div>
+      <span class="lab l">Vous sous-estimez</span><span class="lab c">Juste</span><span class="lab r">Vous surestimez</span></div>
+    <p class="pivot" id="sy-bias"></p>
+    <h2>Ce qu’il faut retenir</h2>
+    <div class="zcard" style="--z: var(--z1)"><h3>Marches 1 à 3 : chacun peut y gagner</h3><p>Les positions se durcissent, on débat, puis on agit seul. Mais l’autre reste un interlocuteur.</p><p class="help">Ce qui aide : se parler tôt, par écrit si besoin ; une négociation directe, éventuellement accompagnée.</p></div>
+    <div class="zcard" style="--z: var(--z2)"><h3>Marches 4 à 6 : l’un contre l’autre</h3><p>On cherche des alliés, on discrédite, on menace. Il ne s’agit plus de régler le problème, mais de gagner.</p><p class="help">Ce qui aide : un tiers neutre. La médiation est l’outil type de cette zone.</p></div>
+    <div class="zcard" style="--z: var(--z3)"><h3>Marches 7 à 9 : tout le monde y perd</h3><p>Nuire devient le but, quitte à se nuire à soi-même.</p><p class="help">Ce qui aide : souvent, une décision imposée de l’extérieur, celle d’un juge ou d’un arbitre.</p></div>
+    <h2>Les signaux à guetter</h2>
+    <ul class="signals">
+      <li><b>On agit sans prévenir l’autre.</b> C’est la marche 3 : la dernière où un simple échange peut tout régler.</li>
+      <li><b>On parle de l’autre plutôt qu’à l’autre.</b> Marche 4 : le conflit sort du face-à-face et recrute des alliés.</li>
+      <li><b>« Si tu…, alors… ».</b> Marche 6 : la menace remplace la discussion. Il est grand temps qu’un tiers intervienne.</li>
+    </ul>
+    <div class="row">
+      <a class="btn main" id="sy-tool" href="#" hidden>Situer mon propre conflit avec La Vigie</a>
+      <button class="btn quiet" id="restart">Recommencer dix histoires</button>
+    </div>
+    <p class="foot">Repère : Friedrich Glasl, <i>Konfliktmanagement</i> (1980), modèle d’escalade en neuf marches. Les noms des marches sont traduits et simplifiés.</p>
+  </section>
+
+  <div class="sheet" id="sheet" role="status"><div class="in" id="sheet-in">
+    <h2 id="v-title"></h2>
+    <p class="desc" id="v-desc"></p>
+    <p class="zl" id="v-zone"></p>
+    <button class="btn main" id="next">Scène suivante</button>
+  </div></div>
+</div>
+
+<script>
+/* ——— réglages ——— */
+const TOOL_URL = "";   // lien de La Vigie, à renseigner au déploiement
+const SHARE_URL = location.href;
+const KEY = "revela-escalier-v1";
+const GAMES = 10;
+
+/* ——— les neuf marches (d’après Glasl, 1980) ——— */
+const STEPS = [
+  ["Le durcissement", "Les positions se figent, mais on se parle encore et l’on croit pouvoir s’entendre."],
+  ["Le débat", "Chacun veut avoir raison : les échanges tournent à la joute, les arguments se polarisent."],
+  ["Les actes plutôt que les paroles", "On cesse de discuter et l’on agit seul, en mettant l’autre devant le fait accompli."],
+  ["Les images et les alliances", "On parle de l’autre plutôt qu’à l’autre, on cherche des alliés, les caricatures s’installent."],
+  ["La perte de la face", "On cherche à discréditer l’autre publiquement : il devient moralement « mauvais »."],
+  ["Les menaces", "Ultimatums et menaces : « si tu…, alors… ». On cherche à contraindre l’autre."],
+  ["Les coups limités", "On cherche à nuire, en acceptant ses propres pertes si l’autre perd davantage."],
+  ["La destruction", "On vise les bases de l’autre : le ruiner, l’isoler, le faire tomber."],
+  ["Ensemble dans l’abîme", "Détruire l’autre compte plus que se préserver, quitte à tout perdre soi-même."],
+];
+const ZONES = [
+  { name: "Chacun peut encore y gagner", help: "Un échange direct, éventuellement accompagné, peut encore tout régler.", c: "var(--z1)" },
+  { name: "L’un contre l’autre", help: "Un tiers neutre devient utile : c’est le terrain de la médiation.", c: "var(--z2)" },
+  { name: "Tout le monde y perd", help: "La décision vient souvent de l’extérieur : un juge, un arbitre.", c: "var(--z3)" },
+];
+const zoneOf = (n) => (n <= 3 ? 0 : n <= 6 ? 1 : 2);
+
+/* ——— dix histoires, neuf scènes chacune, rangées de la marche 1 à la marche 9 ——— */
+const STORIES = [
+  ["Le mur mitoyen", "Marc et Sophie, voisins", [
+    "Marc trouve que la haie de Sophie déborde. Il lui en parle, un peu sèchement, devant le portail.",
+    "À chaque rencontre, ils rejouent la discussion : chacun cite le règlement du lotissement à sa façon.",
+    "Sans prévenir, Marc taille lui-même la haie côté Sophie, un samedi matin.",
+    "Sophie fait le tour du lotissement pour raconter que Marc « a toujours posé problème ».",
+    "Au repas des voisins, Sophie affirme devant tous que Marc surveille les jardins des autres.",
+    "Marc glisse un mot dans sa boîte : « Si la haie n’est pas arrachée sous huit jours, vous le regretterez. »",
+    "Sophie dépose une plainte qu’elle sait fragile, juste pour lui causer des ennuis.",
+    "Marc écrit à l’employeur de Sophie pour se plaindre d’elle, dans l’espoir de lui faire perdre son poste.",
+    "Marc enchaîne les procès, quitte à vendre sa maison à perte, pourvu que Sophie n’obtienne jamais rien.",
+  ]],
+  ["Les deux associés", "Léa et Hugo, cofondateurs", [
+    "Léa et Hugo ne sont pas d’accord sur le recrutement d’un commercial. La réunion se termine sans décision.",
+    "Chaque comité tourne au duel : chacun arrive avec ses chiffres pour démontrer que l’autre a tort.",
+    "Hugo signe seul le contrat du nouveau commercial, sans attendre l’avis de Léa.",
+    "Léa sonde les salariés un par un pour savoir qui est « de son côté ».",
+    "En réunion d’équipe, Léa déclare qu’Hugo « ne comprend rien à la gestion ».",
+    "Hugo écrit à Léa : « Soit tu me cèdes tes parts à mon prix, soit je bloque toutes les décisions. »",
+    "Léa garde pour elle des informations sur un client important, même si la société en souffre.",
+    "Hugo démarche les principaux clients pour les emmener dans une nouvelle société, sans Léa.",
+    "Léa préfère voir la société disparaître plutôt que d’en laisser une part à Hugo.",
+  ]],
+  ["La maison de famille", "Anne et Paul, frère et sœur", [
+    "Après le décès de leur mère, Anne voudrait garder la maison, Paul préférerait vendre. Ils en parlent calmement, sans conclure.",
+    "Chaque appel tourne à la plaidoirie : chacun rappelle tout ce qu’il a fait pour leur mère.",
+    "Anne change les serrures de la maison sans en parler à Paul.",
+    "Paul appelle cousins et oncles pour leur expliquer qu’Anne « a toujours été la préférée ».",
+    "Au repas de Noël, Paul accuse Anne, devant toute la famille, d’avoir profité de leur mère.",
+    "Anne écrit : « Si tu ne signes pas mon partage, je ferai traîner la succession pendant dix ans. »",
+    "Paul cesse de payer sa part de la taxe foncière, au risque d’en subir lui aussi les pénalités.",
+    "Anne tente de faire placer Paul sous tutelle pour l’écarter de toute décision.",
+    "Paul laisse la maison tomber en ruine plutôt que de la voir revenir à Anne.",
+  ]],
+  ["Le chantier de cuisine", "Camille et son artisan", [
+    "Le chantier prend du retard. Camille en parle à l’artisan, qui promet de rattraper le temps perdu.",
+    "Les échanges se tendent : chacun ressort le devis pour prouver qu’il est dans son droit.",
+    "Camille cesse de payer l’échéance prévue, sans prévenir l’artisan.",
+    "L’artisan raconte aux autres corps de métier que Camille est « une cliente impossible ».",
+    "Camille publie un avis en ligne qui traite l’artisan d’escroc.",
+    "L’artisan écrit : « Payez sous 48 heures, ou je reviens démonter ce que j’ai posé. »",
+    "L’artisan démonte les meubles déjà posés, quitte à ne jamais être payé.",
+    "Camille contacte tous les fournisseurs de l’artisan pour qu’ils cessent de travailler avec lui.",
+    "Camille dépense plus en procédures que le prix de la cuisine, pourvu que l’artisan perde tout.",
+  ]],
+  ["Le bail commercial", "Karim, libraire, et sa bailleresse", [
+    "Karim trouve le loyer révisé trop élevé. Il en parle à Mme Duval, qui promet d’y réfléchir.",
+    "Chaque échange devient une bataille d’indices et de calculs : chacun veut démontrer que l’autre se trompe.",
+    "Karim ne paie plus que la part du loyer qu’il juge juste, sans accord.",
+    "Mme Duval prévient les autres commerçants de l’immeuble que Karim « ne paie pas ses dettes ».",
+    "Karim affiche en vitrine un mot qui dénonce « les méthodes de sa propriétaire ».",
+    "Mme Duval écrit : « Vous payez tout, ou je ferai tout pour que vous perdiez votre fonds. »",
+    "Mme Duval laisse traîner une fuite d’eau dans la réserve, même si son immeuble se dégrade.",
+    "Karim signale l’immeuble à tous les services de contrôle possibles, pour ruiner sa propriétaire en travaux.",
+    "Karim préfère fermer sa librairie plutôt que de laisser Mme Duval toucher un seul loyer de plus.",
+  ]],
+  ["Le bureau partagé", "Nadia et Thomas, collègues", [
+    "Nadia et Thomas ne s’accordent pas sur le partage d’un dossier. Ils en reparleront, disent-ils.",
+    "Chaque réunion tourne à l’affrontement : ils s’interrompent et se contredisent point par point.",
+    "Thomas envoie le dossier au client sous son seul nom, sans consulter Nadia.",
+    "Nadia déjeune avec chaque collègue pour lui raconter « qui est vraiment Thomas ».",
+    "En réunion de service, Nadia laisse entendre que Thomas s’approprie le travail des autres.",
+    "Thomas lui dit : « Si tu continues, je fais remonter toutes tes erreurs à la direction. »",
+    "Nadia garde une information dont Thomas a besoin, même si le projet de l’équipe échoue.",
+    "Thomas multiplie les signalements à la direction pour obtenir le départ de Nadia.",
+    "Nadia démissionne en laissant ses dossiers inutilisables, quitte à ruiner sa propre réputation, pourvu que Thomas échoue.",
+  ]],
+  ["Le ravalement", "M. Leroy et sa copropriété", [
+    "M. Leroy trouve le devis de ravalement trop cher. Il le dit au conseil syndical, qui l’écoute.",
+    "En assemblée générale, la discussion tourne au débat sans fin : chacun conteste les chiffres de l’autre.",
+    "M. Leroy refuse l’accès de son balcon aux entreprises, sans prévenir personne.",
+    "Le président du conseil syndical rallie les copropriétaires contre « celui qui bloque tout ».",
+    "Une affiche dans le hall désigne nommément M. Leroy comme responsable des retards.",
+    "Le conseil syndical lui écrit : « Sans accès sous huit jours, nous lancerons contre vous toutes les procédures possibles. »",
+    "M. Leroy conteste chaque décision d’assemblée, même celles qui servent ses propres intérêts.",
+    "Le conseil syndical cherche par tous les moyens à pousser M. Leroy à vendre et à quitter l’immeuble.",
+    "M. Leroy accepte de voir l’immeuble se dégrader et son propre bien perdre sa valeur, pourvu que le conseil échoue.",
+  ]],
+  ["Le fournisseur", "L’entreprise Alma et son fournisseur", [
+    "Une livraison arrive incomplète. Alma le signale à son fournisseur, qui promet de compléter.",
+    "Les appels deviennent des joutes sur les conditions générales : chacun cite l’article qui l’arrange.",
+    "Alma bloque le paiement de toutes les factures en cours, sans discussion préalable.",
+    "Le fournisseur prévient d’autres clients qu’Alma est « un mauvais payeur ».",
+    "Le dirigeant d’Alma dénonce nommément son fournisseur sur un réseau professionnel.",
+    "Le fournisseur écrit : « Réglez tout sous 72 heures, ou nous coupons les livraisons et vous ferons condamner. »",
+    "Le fournisseur suspend les livraisons, même s’il perd ainsi son plus gros client.",
+    "Alma débauche les commerciaux clés du fournisseur pour l’affaiblir durablement.",
+    "Les deux dirigeants s’enferment dans des procédures qui menacent la survie de leurs deux entreprises.",
+  ]],
+  ["La colocation", "Inès et Jules, colocataires", [
+    "Inès trouve que Jules laisse souvent la vaisselle. Elle lui en parle, il promet de faire attention.",
+    "Chaque soir, la discussion tourne au procès : chacun dresse la liste des oublis de l’autre.",
+    "Inès range les affaires de Jules dans un carton sur le palier, sans un mot.",
+    "Jules raconte à leurs amis communs qu’Inès est « invivable ».",
+    "Inès publie un message moqueur sur Jules dans le groupe de leurs amis.",
+    "Jules écrit : « Si tu continues, je préviens le propriétaire que tu sous-loues ta chambre. »",
+    "Inès coupe la connexion internet qu’elle paie seule, même si elle en a besoin pour travailler.",
+    "Jules fait tout pour qu’Inès perde son dépôt de garantie et se retrouve sans logement.",
+    "Inès donne congé pour tout le logement, quitte à se retrouver elle-même sans toit, pourvu que Jules parte aussi.",
+  ]],
+  ["L’association", "Martine, présidente, et Yves, trésorier", [
+    "Martine et Yves ne s’accordent pas sur le budget de la fête annuelle de l’association.",
+    "Les réunions de bureau s’éternisent : chacun défend sa ligne et réfute celle de l’autre point par point.",
+    "Yves engage seul une dépense importante, sans vote du bureau.",
+    "Martine appelle les adhérents un à un pour constituer « son camp » avant l’assemblée.",
+    "En assemblée générale, Martine accuse Yves de gestion douteuse devant tous les adhérents.",
+    "Yves répond : « Si tu ne retires pas ces propos, je bloque les comptes de l’association. »",
+    "Yves gèle les paiements, même si l’association ne peut plus régler ses fournisseurs.",
+    "Martine fait voter l’exclusion d’Yves et prévient les partenaires pour le discréditer durablement.",
+    "Les deux camps s’acharnent à avoir le dernier mot, jusqu’à la dissolution de l’association.",
+  ]],
+];
+
+/* ——— utilitaires ——— */
+const $ = (id) => document.getElementById(id);
+const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const load = () => { try { return JSON.parse(localStorage.getItem(KEY) || "null"); } catch { return null; } };
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* indisponible */ } };
+const lc = (s) => s.charAt(0).toLowerCase() + s.slice(1);
+(function spiral() {
+  const p = []; for (let i = 0; i <= 140; i++) { const t = i / 140, th = t * 3.4 * 2 * Math.PI, r = t * 10.5;
+    p.push(`${(12 + r * Math.cos(th - Math.PI / 2)).toFixed(2)},${(12 + r * Math.sin(th - Math.PI / 2)).toFixed(2)}`); }
+  $("spiral").setAttribute("points", p.join(" "));
+})();
+
+const newCycle = () => ({ order: shuffle([...Array(STORIES.length).keys()]), game: 0,
+  st: { pts: 0, exact: 0, near: 0, n: 0, err: 0, zone: [[0, 0], [0, 0], [0, 0]] } });
+let S = load() || { best: null, cycle: newCycle() };
+if (!S.cycle) S.cycle = newCycle();
+
+let story = null, queue = [], pos = 0, answers = [], locked = false;
+
+/* ——— l’escalier ——— */
+function buildStair(el, interactive) {
+  el.innerHTML = STEPS.map((s, i) => {
+    const n = i + 1, z = ZONES[zoneOf(n)].c;
+    return `<li style="--n:${n}"><button class="step" data-n="${n}" style="--z:${z}" ${interactive ? "" : "disabled tabindex='-1'"}
+      aria-label="Marche ${n} : ${s[0]}"><span class="num">${n}</span><span class="nm">${s[0]}</span><span class="pins"></span></button></li>`;
+  }).join("");
+}
+buildStair($("mini"), false);
+buildStair($("stair"), true);
+
+function show(id) {
+  ["s-intro", "s-play", "s-end", "s-synth"].forEach((s) => $(s).classList.toggle("on", s === id));
+  $("sheet").classList.remove("on");
+  if (id !== "s-play") $("counter").textContent = "";
+  window.scrollTo(0, 0);
+}
+function refreshIntro() {
+  const g = S.cycle.game;
+  $("cycle").innerHTML = g >= GAMES ? "Vos dix histoires sont terminées : votre synthèse est prête."
+    : g === 0 ? "Dix histoires, quatre-vingt-dix scènes : une synthèse vous attend à la fin."
+    : `Histoire <b>${g + 1}</b> sur ${GAMES}. Encore ${GAMES - g} avant votre synthèse.`;
+  $("start").textContent = g >= GAMES ? "Recommencer dix histoires" : g === 0 ? "Commencer" : `Jouer l’histoire ${g + 1}`;
+  $("open-synth").hidden = g < GAMES;
+}
+
+function newGame() {
+  if (S.cycle.game >= GAMES) { S.cycle = newCycle(); save(); }
+  story = STORIES[S.cycle.order[S.cycle.game]];
+  queue = shuffle([...Array(9).keys()]);
+  pos = 0; answers = [];
+  document.querySelectorAll("#stair .pins").forEach((p) => (p.innerHTML = ""));
+  show("s-play"); deal();
+}
+
+function deal() {
+  locked = false;
+  const k = queue[pos];
+  $("story").textContent = `${story[0]}, ${lc(story[1])}`;
+  $("txt").textContent = story[2][k];
+  $("counter").innerHTML = `Histoire ${S.cycle.game + 1}, scène <strong>${pos + 1}</strong> sur 9`;
+  document.querySelectorAll("#stair .step").forEach((b) => { b.disabled = false; b.classList.remove("mine", "truth"); });
+  const sc = $("scene"); sc.style.opacity = 0; sc.style.transform = "translateY(10px)";
+  requestAnimationFrame(() => requestAnimationFrame(() => { sc.style.opacity = 1; sc.style.transform = ""; }));
+  $("sheet").classList.remove("on");
+  sc.focus({ preventScroll: true });
+}
+
+function place(n) {
+  if (locked) return; locked = true;
+  const truth = queue[pos] + 1, d = n - truth, pts = d === 0 ? 2 : Math.abs(d) === 1 ? 1 : 0;
+  answers.push({ truth, given: n, pts });
+  const btns = document.querySelectorAll("#stair .step");
+  btns.forEach((b) => (b.disabled = true));
+  btns[n - 1].classList.add("mine"); btns[truth - 1].classList.add("truth");
+  btns[truth - 1].querySelector(".pins").insertAdjacentHTML("beforeend", "<i></i>");
+  const name = lc(STEPS[truth - 1][0]), z = ZONES[zoneOf(truth)];
+  $("v-title").textContent = pts === 2 ? `Juste : marche ${truth}, ${name}.` : pts === 1 ? `Presque : c’était la marche ${truth}, ${name}.` : `Non : c’était la marche ${truth}, ${name}.`;
+  $("v-desc").textContent = STEPS[truth - 1][1];
+  $("v-zone").textContent = `${z.name}. ${z.help}`;
+  $("sheet-in").style.setProperty("--v", pts === 2 ? "var(--ok)" : pts === 1 ? "var(--near)" : "var(--ko)");
+  $("next").textContent = pos === 8 ? "Voir l’histoire en entier" : "Scène suivante";
+  $("sheet").classList.add("on");
+  setTimeout(() => $("next").focus({ preventScroll: true }), 50);
+}
+
+function next() { if (pos < 8) { pos++; deal(); } else finish(); }
+
+function biasText(err, n) {
+  const m = n ? err / n : 0;
+  if (m <= -0.5) return ["Vous avez tendance à sous-estimer l’escalade.", `Vous placez les scènes, en moyenne, ${Math.abs(m).toFixed(1).replace(".", ",")} marche plus bas qu’elles ne sont. C’est le piège le plus fréquent dans la réalité : on pense pouvoir encore discuter, alors que le conflit est déjà passé à la menace. Résultat, on cherche de l’aide trop tard.`];
+  if (m >= 0.5) return ["Vous avez tendance à surestimer l’escalade.", `Vous placez les scènes, en moyenne, ${m.toFixed(1).replace(".", ",")} marche plus haut qu’elles ne sont. La vigilance est une qualité, mais voir trop tôt une guerre peut fermer des portes qu’un simple échange aurait ouvertes.`];
+  return ["Vous lisez juste la hauteur d’un conflit.", "Vos placements ne penchent ni vers le bas, ni vers le haut. C’est rare, et c’est précieux : savoir où l’on en est permet de choisir la bonne réponse au bon moment."];
+}
+
+function finish() {
+  const pts = answers.reduce((s, a) => s + a.pts, 0);
+  if (!(S.best >= pts)) S.best = pts;
+  const st = S.cycle.st;
+  answers.forEach((a) => {
+    st.pts += a.pts; st.n++; st.err += a.given - a.truth;
+    if (a.pts === 2) st.exact++; else if (a.pts === 1) st.near++;
+    const z = zoneOf(a.truth); st.zone[z][1]++; if (a.pts === 2) st.zone[z][0]++;
+  });
+  S.cycle.game++; save();
+  const last = S.cycle.game >= GAMES;
+  $("score").innerHTML = `${pts}<small> / 18</small>`;
+  $("t-end").textContent = pts >= 15 ? "Vous lisez très bien la montée de ce conflit." : pts >= 10 ? "Vous avez saisi l’essentiel de la montée." : "Les marches se ressemblent de près. Relisez l’histoire dans l’ordre : la pente apparaît.";
+  const B = biasText(answers.reduce((s, a) => s + a.given - a.truth, 0), 9);
+  $("pivot").innerHTML = `<b>Jusqu’à la marche 3, tout pouvait encore se régler par un échange.</b>${B[0]} ${B[1].split(". ").slice(0, 1).join(". ")}.`;
+  const by = {}; answers.forEach((a) => (by[a.truth] = a));
+  $("story-list").innerHTML = story[2].map((t, i) => {
+    const n = i + 1, a = by[n], m = a.pts === 2 ? "✓" : a.pts === 1 ? "≈" : "✗";
+    const col = a.pts === 2 ? "var(--ok)" : a.pts === 1 ? "var(--near)" : "var(--ko)";
+    return `<li style="--z:${ZONES[zoneOf(n)].c}"><span class="n">${n}</span><span class="t"><small>${STEPS[i][0]}${a.pts < 2 ? `, vous aviez dit ${a.given}` : ""}</small>${t}</span><span class="m" style="color:${col}" aria-label="${a.pts === 2 ? "juste" : a.pts === 1 ? "à une marche près" : "faux"}">${m}</span></li>`;
+  }).join("");
+  $("to-synth").hidden = !last; $("again").hidden = last;
+  $("again").textContent = `Histoire suivante (${S.cycle.game + 1} sur ${GAMES})`;
+  $("toast").textContent = last ? "Dix histoires terminées : votre synthèse est prête." : "";
+  show("s-end"); (last ? $("to-synth") : $("again")).focus({ preventScroll: true });
+}
+
+function synthesis() {
+  const st = S.cycle.st;
+  $("sy-score").textContent = `${st.pts} points sur ${st.n * 2}. ${st.exact} scènes placées sur la marche exacte et ${st.near} à une marche près, sur ${st.n}.`;
+  $("sy-bars").innerHTML = ["Marches 1 à 3", "Marches 4 à 6", "Marches 7 à 9"].map((l, z) => {
+    const [ok, n] = st.zone[z];
+    return `<li><span>${l}</span><span class="tr"><span style="width:${n ? (100 * ok) / n : 0}%;background:${ZONES[z].c}"></span></span><span class="v">${ok}/${n}</span></li>`;
+  }).join("");
+  const m = st.n ? st.err / st.n : 0;
+  $("g-dot").style.left = `${50 + Math.max(-1, Math.min(1, m / 2)) * 46}%`;
+  const B = biasText(st.err, st.n);
+  $("sy-bias").innerHTML = `<b>${B[0]}</b>${B[1]}`;
+  if (TOOL_URL) { $("sy-tool").href = TOOL_URL; $("sy-tool").hidden = false; }
+  show("s-synth");
+}
+
+async function share() {
+  const pts = answers.reduce((s, a) => s + a.pts, 0);
+  const txt = `J’ai fait ${pts} sur 18 à « L’escalier du conflit », le jeu Révéla. Sauriez-vous dire à quelle marche en est un conflit ?`;
+  try {
+    if (navigator.share) { await navigator.share({ title: "L’escalier du conflit", text: txt, url: SHARE_URL }); return; }
+    await navigator.clipboard.writeText(`${txt} ${SHARE_URL}`);
+    $("toast").textContent = "Texte copié : collez-le où vous voulez.";
+  } catch (e) {
+    if (e && e.name === "AbortError") return;
+    $("toast").textContent = "Partage indisponible ici. Faites une capture d’écran de votre score.";
+  }
+}
+
+/* ——— commandes ——— */
+$("stair").addEventListener("click", (e) => { const b = e.target.closest(".step"); if (b && !b.disabled) place(+b.dataset.n); });
+$("start").onclick = newGame; $("again").onclick = newGame; $("next").onclick = next; $("share").onclick = share;
+$("to-synth").onclick = synthesis; $("open-synth").onclick = synthesis;
+$("restart").onclick = () => { S.cycle = newCycle(); save(); refreshIntro(); show("s-intro"); };
+$("home").onclick = (e) => { e.preventDefault(); refreshIntro(); show("s-intro"); };
+document.addEventListener("keydown", (e) => {
+  if (!$("s-play").classList.contains("on")) return;
+  if (/^[1-9]$/.test(e.key) && !locked) { e.preventDefault(); place(+e.key); }
+  else if ((e.key === "Enter" || e.key === " ") && locked && document.activeElement !== $("next")) { e.preventDefault(); next(); }
+});
+refreshIntro(); show("s-intro");
+</script>
+</body>
+</html>

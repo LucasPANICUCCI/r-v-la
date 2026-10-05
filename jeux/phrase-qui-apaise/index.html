@@ -1,0 +1,606 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="description" content="La phrase qui apaise — un jeu Révéla, par DSP Avocats. Choisissez le message qui rouvre le dialogue." />
+<meta name="theme-color" content="#0E1A2F" />
+<title>La phrase qui apaise — un jeu Révéla</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400;1,500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --table: #0E1A2F; --table-2: #15253F; --card: #F6F0E3; --card-edge: #E4D9C3;
+  --ink: #1B2A4A; --muted: #6E6A5E; --gold: #C9A45C; --gold-soft: #E2C88F; --cream: #F3ECDD; --dim: #9EA6B6;
+  --hot: #D0675B; --ok: #8DB07A; --ko: #D0675B;
+  --o: #3D6FA5; --s: #B4562F; --b: #6E8F4E; --d: #8A6A1F;
+  --serif: "Cormorant Garamond", Garamond, "Times New Roman", serif; --sans: "DM Sans", "Helvetica Neue", Arial, sans-serif;
+  box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+:root:not([data-theme="light"]) { color-scheme: dark; }
+*, *::before, *::after { box-sizing: inherit; }
+html, body { min-height: 100%; }
+body { margin: 0; background: radial-gradient(120% 80% at 50% 25%, var(--table-2), var(--table) 70%) fixed var(--table);
+  color: var(--cream); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; cursor: pointer; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.app { max-width: 540px; margin: 0 auto; padding: 16px 20px 28px; min-height: 100vh; display: flex; flex-direction: column; }
+.top { display: flex; align-items: center; justify-content: space-between; min-height: 40px; }
+.brand { display: inline-flex; align-items: center; gap: 9px; color: var(--cream); text-decoration: none; }
+.brand svg { color: var(--gold); }
+.brand span { font-family: var(--serif); font-size: 21px; font-weight: 600; letter-spacing: .08em; }
+.counter { font-size: 14px; color: #B9BFCC; text-align: right; }
+.counter strong { color: var(--cream); font-weight: 600; }
+.dots { display: flex; gap: 5px; margin: 12px 0 0; }
+.dots i { flex: 1; height: 3px; border-radius: 2px; background: rgba(243,236,221,.14); }
+.dots i.ok { background: var(--ok); } .dots i.ko { background: var(--ko); } .dots i.now { background: var(--cream); }
+.screen { display: none; flex-direction: column; flex: 1; }
+.screen.on { display: flex; }
+.btn { border: 1px solid var(--cream); background: transparent; border-radius: 999px; padding: 14px 26px; font-size: 16px; font-weight: 500; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
+.btn.main { background: var(--gold); border-color: var(--gold); color: var(--table); font-weight: 600; }
+.btn.main:hover { background: var(--gold-soft); }
+.btn.quiet { border-color: rgba(243,236,221,.35); }
+.btn.quiet:hover { border-color: var(--cream); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+.lede { margin: 0; font-size: 16px; line-height: 1.55; color: #D8D3C6; max-width: 34em; }
+.foot { font-size: 12px; color: #8D95A6; line-height: 1.5; margin: 8px 0 0; }
+.foot a { color: #B9BFCC; }
+
+/* ——— les quatre temps : l’élément signature ——— */
+.osbd { display: flex; flex-wrap: wrap; gap: 4px 6px; line-height: 1.5; }
+.seg { position: relative; padding: 2px 0 15px; }
+.seg span.tx { box-shadow: inset 0 -2px 0 var(--c); }
+.seg span.lb { position: absolute; left: 0; bottom: 0; font-size: 10.5px; font-weight: 600; color: var(--c); white-space: nowrap; letter-spacing: .02em; }
+.seg.o { --c: var(--o); } .seg.s { --c: var(--s); } .seg.b { --c: var(--b); } .seg.d { --c: var(--d); }
+
+/* accueil */
+.intro { gap: 20px; padding: 14px 0; }
+.title { font-family: var(--serif); font-weight: 500; font-size: clamp(48px, 13vw, 64px); line-height: .98; margin: 0; }
+.title em { font-style: italic; color: var(--gold-soft); font-weight: 400; }
+.demo { background: var(--card); color: var(--ink); border-radius: 18px; padding: 18px 20px; box-shadow: 0 18px 46px rgba(0,0,0,.38); }
+.demo .raw { margin: 0 0 12px; font-family: var(--serif); font-style: italic; font-size: 21px; color: #8E3B46; text-decoration: line-through; text-decoration-thickness: 1px; }
+.demo .osbd { font-family: var(--serif); font-size: 19px; }
+.cycle { font-size: 14px; color: #B9BFCC; margin: 0; } .cycle b { color: var(--cream); }
+
+/* jeu */
+.raw-card { margin: 14px 0 12px; padding: 16px 18px; border-radius: 16px; background: rgba(208,103,91,.1); border: 1px solid rgba(208,103,91,.35); }
+.raw-card .ctx { margin: 0 0 4px; font-size: 13px; color: var(--dim); }
+.raw-card .q { margin: 0; font-family: var(--serif); font-style: italic; font-size: clamp(22px, 6vw, 26px); line-height: 1.28; color: #F3D9D3; }
+.ask { margin: 0 0 10px; font-size: 14px; color: var(--dim); }
+.opts { display: grid; gap: 10px; }
+.opt { text-align: left; background: var(--card); color: var(--ink); border: 0; border-radius: 14px; padding: 14px 16px 14px 46px; position: relative;
+  font-family: var(--serif); font-size: 19px; line-height: 1.35; box-shadow: inset 0 0 0 1px var(--card-edge); transition: transform .15s, opacity .2s, box-shadow .2s; }
+.opt::before { content: attr(data-l); position: absolute; left: 14px; top: 13px; width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--muted);
+  font-family: var(--sans); font-size: 12px; font-weight: 600; color: var(--muted); display: flex; align-items: center; justify-content: center; }
+.opt:hover:not(:disabled) { transform: translateX(3px); }
+.opt:disabled { cursor: default; }
+.opt.dim { opacity: .45; }
+.opt.good { box-shadow: inset 0 0 0 3px var(--ok); opacity: 1; }
+.opt.bad { box-shadow: inset 0 0 0 3px var(--ko); opacity: 1; }
+.verdict { margin-top: 14px; padding: 16px 18px; border-radius: 16px; background: rgba(243,236,221,.06); border-left: 3px solid var(--v); display: none; }
+.verdict.on { display: block; animation: rise .22s ease-out; }
+.verdict h2 { margin: 0 0 4px; font-family: var(--serif); font-size: 24px; font-weight: 600; }
+.verdict .why { margin: 0 0 12px; font-size: 15px; line-height: 1.5; color: #E2DDD1; }
+.verdict .model { background: var(--card); color: var(--ink); border-radius: 12px; padding: 12px 14px 4px; margin: 0 0 12px; font-family: var(--serif); font-size: 18px; }
+.verdict .model p { margin: 0 0 6px; font-family: var(--sans); font-size: 12.5px; color: var(--muted); }
+.verdict .btn { padding: 11px 20px; font-size: 15px; }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* fin de partie, synthèse */
+.end, .synth { gap: 16px; padding: 10px 0 20px; }
+.score { font-family: var(--serif); font-size: 84px; line-height: .9; margin: 6px 0 0; font-weight: 500; }
+.score small { font-size: 30px; color: var(--dim); }
+.read { font-family: var(--serif); font-size: 23px; line-height: 1.3; margin: 0; }
+.lesson { margin: 0; padding: 14px 16px; border-radius: 14px; background: var(--card); color: var(--ink); font-size: 15px; line-height: 1.5; }
+.lesson b { font-family: var(--serif); font-size: 19px; display: block; margin-bottom: 2px; }
+.bars { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.bars li { display: grid; grid-template-columns: 150px 1fr 34px; gap: 12px; align-items: center; font-size: 14.5px; color: #D8D3C6; }
+.bars .tr { height: 6px; border-radius: 3px; background: rgba(243,236,221,.12); overflow: hidden; }
+.bars .tr span { display: block; height: 100%; border-radius: 3px; background: var(--hot); }
+.bars .v { text-align: right; color: var(--cream); font-weight: 600; }
+.toast { min-height: 18px; font-size: 13.5px; color: var(--gold-soft); margin: 0; }
+.synth h1 { font-family: var(--serif); font-weight: 500; font-size: clamp(36px, 10vw, 46px); line-height: 1.02; margin: 4px 0 0; }
+.synth h2 { font-family: var(--serif); font-weight: 600; font-size: 25px; margin: 8px 0 0; }
+.steps { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; counter-reset: k; }
+.steps li { background: var(--card); color: var(--ink); border-radius: 14px; padding: 13px 16px 13px 52px; position: relative; counter-increment: k; border-left: 5px solid var(--c); }
+.steps li::before { content: counter(k); position: absolute; left: 18px; top: 10px; font-family: var(--serif); font-size: 28px; font-weight: 600; color: var(--c); }
+.steps b { font-family: var(--serif); font-size: 20px; display: block; }
+.steps span { font-size: 14.5px; line-height: 1.45; }
+.steps i { display: block; margin-top: 4px; font-family: var(--serif); font-size: 17px; color: #4A4F60; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pair div { border-radius: 14px; padding: 12px 14px; font-size: 14.5px; line-height: 1.6; }
+.pair .close { background: rgba(208,103,91,.1); border: 1px solid rgba(208,103,91,.35); }
+.pair .open { background: rgba(141,176,122,.1); border: 1px solid rgba(141,176,122,.4); }
+.pair h3 { margin: 0 0 4px; font-family: var(--serif); font-size: 19px; font-weight: 600; }
+@media (max-width: 420px) { .pair { grid-template-columns: 1fr; } .bars li { grid-template-columns: 120px 1fr 30px; } }
+@media (prefers-reduced-motion: reduce) { .verdict.on { animation: none; } .opt { transition: none; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <a class="brand" href="#" id="home" aria-label="Retour à l’accueil du jeu">
+      <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><polyline id="spiral" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"></polyline></svg>
+      <span>Révéla</span>
+    </a>
+    <span class="counter" id="counter" aria-live="polite"></span>
+  </header>
+  <div class="dots" id="dots" aria-hidden="true"></div>
+
+  <section class="screen intro on" id="s-intro" aria-labelledby="t-intro">
+    <h1 class="title" id="t-intro">La phrase<br><em>qui apaise</em></h1>
+    <p class="lede">Dans un conflit, le premier message décide souvent de la suite. Pour chaque situation, trois versions : choisissez celle qui rouvre le dialogue.</p>
+    <div class="demo" aria-label="Exemple">
+      <p class="raw">« Vous vous moquez de moi, le chantier n’avance pas ! »</p>
+      <div class="osbd" id="demo"></div>
+    </div>
+    <p class="lede">Une phrase qui apaise tient en quatre temps : un fait précis, ce que vous ressentez, ce dont vous avez besoin, et une demande concrète.</p>
+    <p class="cycle" id="cycle"></p>
+    <div class="row"><button class="btn main" id="start">Commencer</button><button class="btn quiet" id="open-synth" hidden>Voir ma synthèse</button></div>
+    <p class="foot">D’après la communication non violente de Marshall Rosenberg.</p>
+  </section>
+
+  <section class="screen" id="s-play" aria-label="Partie en cours">
+    <div class="raw-card">
+      <p class="ctx" id="ctx"></p>
+      <p class="q" id="raw"></p>
+    </div>
+    <p class="ask">Ce que vous avez envie d’écrire, ci-dessus. Quelle version envoyez-vous ?</p>
+    <div class="opts" id="opts"></div>
+    <div class="verdict" id="verdict" role="status">
+      <h2 id="v-title"></h2>
+      <p class="why" id="v-why"></p>
+      <div class="model"><p>La version qui ouvre, en quatre temps</p><div class="osbd" id="v-model"></div></div>
+      <button class="btn main" id="next">Situation suivante</button>
+    </div>
+  </section>
+
+  <section class="screen end" id="s-end" aria-labelledby="t-end">
+    <p class="score" id="score"></p>
+    <h2 class="read" id="t-end"></h2>
+    <p class="lesson" id="lesson"></p>
+    <div class="row">
+      <button class="btn main" id="to-synth" hidden>Découvrir ma synthèse</button>
+      <button class="btn main" id="again"></button>
+      <button class="btn quiet" id="share">Partager mon score</button>
+    </div>
+    <p class="toast" id="toast" role="status"></p>
+    <p class="foot">Un jeu Révéla, par SELARL DSP Avocats, Barreau de Nice. Jeu pédagogique, sans collecte de données : votre progression reste sur cet appareil. <a href="mailto:contact@dsp-avocats.fr">contact@dsp-avocats.fr</a> · <a href="/">Tous les outils et jeux Révéla</a> · <a href="/mentions-legales/">Mentions légales</a></p>
+  </section>
+
+  <section class="screen synth" id="s-synth" aria-labelledby="t-synth">
+    <h1 id="t-synth">Votre synthèse, après dix parties</h1>
+    <p class="lede" id="sy-score"></p>
+    <h2>Vos pièges préférés</h2>
+    <ul class="bars" id="sy-bars"></ul>
+    <p class="lesson" id="sy-lesson"></p>
+    <h2>Les quatre temps d’une phrase qui apaise</h2>
+    <ol class="steps">
+      <li style="--c: var(--o)"><b>Le fait</b><span>Ce qui s’est passé, daté, sans jugement : ce qu’une caméra aurait filmé.</span><i>« Personne n’est venu sur le chantier depuis le 3 avril. »</i></li>
+      <li style="--c: var(--s)"><b>Le ressenti</b><span>Votre émotion, dite à la première personne, sans accuser.</span><i>« Je suis inquiète… »</i></li>
+      <li style="--c: var(--b)"><b>Le besoin</b><span>Ce qui compte pour vous, derrière la colère.</span><i>« …j’ai besoin de visibilité. »</i></li>
+      <li style="--c: var(--d)"><b>La demande</b><span>Une action précise, faisable, avec un délai. Une demande, pas un ordre.</span><i>« Pouvez-vous me donner une date de reprise d’ici vendredi ? »</i></li>
+    </ol>
+    <h2>Les mots qui ferment, les mots qui ouvrent</h2>
+    <div class="pair">
+      <div class="close"><h3>Ils ferment</h3>« toujours », « jamais »<br>« vous êtes… »<br>« si…, alors… »<br>« bravo pour… »<br>« un de ces jours »</div>
+      <div class="open"><h3>Ils ouvrent</h3>« le 3 avril… »<br>« je suis… »<br>« j’ai besoin… »<br>« pourriez-vous… »<br>« d’ici vendredi »</div>
+    </div>
+    <div class="row">
+      <a class="btn main" id="sy-tool" href="#" hidden>Rédiger mon propre message avec L’Ouverture</a>
+      <button class="btn quiet" id="restart">Recommencer dix parties</button>
+    </div>
+    <p class="foot">Repère : Marshall B. Rosenberg, la communication non violente (observation, sentiment, besoin, demande). Les quatre temps sont reformulés pour Révéla.</p>
+  </section>
+</div>
+
+<script>
+/* ——— réglages ——— */
+const TOOL_URL = "";   // lien de L’Ouverture, à renseigner au déploiement
+const SHARE_URL = location.href;
+const KEY = "revela-phrase-qui-apaise-v1";
+const ROUND = 6, GAMES = 10;
+
+/* ——— les pièges ——— */
+const TRAPS = {
+  reproche: ["Le reproche", "Elle accuse ou généralise : l’autre va se défendre plutôt que répondre."],
+  effacement: ["L’effacement", "Vous vous effacez : votre besoin disparaît, et le problème restera entier."],
+  menace: ["La menace", "Elle contraint au lieu d’ouvrir, et fait monter le conflit d’une marche."],
+  ironie: ["L’ironie", "Elle blesse sous couvert de politesse, sans rien demander."],
+  flou: ["Le flou", "Sans fait précis ni demande claire, rien ne peut changer."],
+};
+
+/* ——— les 60 situations ———
+   [contexte, message brut, [fait, ressenti, besoin, demande], [piège 1, type], [piège 2, type]] */
+const DECK = [
+  ["Un voisinage", "Votre musique, c’est tous les soirs ! Vous vous fichez complètement des autres.",
+    ["Hier et avant-hier, la musique s’entendait chez nous après 23 h.", "Je suis épuisé,", "j’ai besoin de dormir avant le travail.", "Pourriez-vous baisser le volume après 22 h ?"],
+    ["La musique s’entendait encore hier soir. Je sais que je suis sans doute trop sensible, ne vous embêtez pas pour moi.", "effacement"],
+    ["Hier encore, la musique jusqu’à minuit. Si ça continue, j’appelle la police dès ce soir.", "menace"]],
+  ["Un chantier de cuisine", "Vous vous moquez de moi, le chantier n’avance pas !",
+    ["Personne n’est venu sur le chantier depuis le 3 avril.", "Je suis inquiète,", "j’ai besoin de visibilité.", "Pouvez-vous me donner une date de reprise d’ici vendredi ?"],
+    ["Bravo pour la rapidité, vraiment : trois semaines sans voir personne, on n’a jamais vu ça.", "ironie"],
+    ["Bonjour, ce serait bien que les choses avancent un peu sur le chantier, à l’occasion. Merci.", "flou"]],
+  ["Une succession", "Tu as toujours été la préférée, et maintenant tu veux tout garder.",
+    ["Tu as changé les serrures de la maison sans m’en parler.", "Je me sens blessé et inquiet :", "j’ai besoin d’être associé aux décisions.", "Peut-on se voir samedi pour en discuter ?"],
+    ["Tu as changé les serrures, évidemment. Tu fais toujours tout dans ton coin, comme d’habitude.", "reproche"],
+    ["Fais comme tu veux pour la maison. De toute façon, je n’ai jamais eu mon mot à dire.", "effacement"]],
+  ["Le travail", "Encore une fois, tu t’es approprié mon travail !",
+    ["Le dossier est parti au client sous ton seul nom, alors que nous l’avons préparé à deux.", "Je suis contrariée,", "j’ai besoin que mon travail soit reconnu.", "Peux-tu corriger l’envoi en ajoutant mon nom ?"],
+    ["Le dossier est parti sous ton seul nom. Tu as un vrai talent pour signer le travail des autres.", "ironie"],
+    ["Le dossier est parti sous ton seul nom. Tu refais ça une fois et j’en parle directement à la direction.", "menace"]],
+  ["Un bail", "Vous êtes un propriétaire qui ne fait jamais rien !",
+    ["La fuite de la salle de bains dure depuis trois semaines ; je vous l’ai signalée le 4 mai.", "Je suis inquiet pour les dégâts :", "j’ai besoin que ce soit réparé.", "Pouvez-vous envoyer un plombier cette semaine ?"],
+    ["Toujours cette fuite. Vous ne répondez jamais à rien, c’est toujours pareil avec vous.", "reproche"],
+    ["Il faudrait peut-être penser à s’occuper un jour de l’appartement, quand vous aurez le temps.", "flou"]],
+  ["Une colocation", "Tu es une vraie souillon, la cuisine est dégoûtante.",
+    ["La vaisselle est restée dans l’évier depuis dimanche.", "Ça m’agace,", "j’ai besoin d’une cuisine utilisable.", "Pourrais-tu la faire ce soir, et qu’on se répartisse les tâches ?"],
+    ["La vaisselle est encore là, mais ce n’est pas grave, je finirai bien par tout faire moi-même.", "effacement"],
+    ["Merci pour cette magnifique exposition dans l’évier, elle tient depuis dimanche.", "ironie"]],
+  ["Un fournisseur", "Vos livraisons sont n’importe quoi, vous êtes des amateurs.",
+    ["La livraison du 12 contenait 40 cartons au lieu de 50.", "Cela nous met en difficulté avec un client :", "nous avons besoin des 10 manquants.", "Pouvez-vous les livrer avant jeudi ?"],
+    ["Encore 10 cartons manquants le 12. Vous n’êtes jamais fiables, avec vous c’est systématique.", "reproche"],
+    ["Il manque 10 cartons. Livrez le reste demain, ou nous cessons toute commande chez vous.", "menace"]],
+  ["Une association", "Tu dépenses l’argent de l’association comme si c’était le tien !",
+    ["La dépense de 1 200 € a été engagée sans vote du bureau.", "Cela m’inquiète :", "j’ai besoin que nos règles soient respectées.", "Peut-on l’inscrire à l’ordre du jour de la prochaine réunion ?"],
+    ["1 200 € sans vote du bureau. Tu fais toujours ce que tu veux, sans jamais demander l’avis de personne.", "reproche"],
+    ["Ce serait bien qu’on fasse un peu plus attention aux dépenses, en général.", "flou"]],
+  ["Une famille", "Tu ramènes toujours les enfants en retard, tu te fiches de tout !",
+    ["Dimanche, les enfants sont rentrés à 20 h au lieu de 18 h.", "J’étais inquiète,", "j’ai besoin qu’on respecte l’horaire convenu.", "Peux-tu me prévenir si tu as un empêchement ?"],
+    ["Les enfants sont rentrés à 20 h dimanche. La prochaine fois, je ne te les confie plus.", "menace"],
+    ["Bon, 20 h au lieu de 18 h, ce n’est pas grave. Fais comme ça t’arrange.", "effacement"]],
+  ["Une administration", "Votre service est incompétent, personne ne répond jamais !",
+    ["J’ai appelé quatre fois depuis le 2 juin au sujet de mon dossier n° 2457, sans réponse.", "Je suis découragé,", "j’ai besoin de savoir où il en est.", "Pouvez-vous me rappeler ou m’écrire d’ici la fin de la semaine ?"],
+    ["Quatre appels depuis le 2 juin : je vous remercie infiniment pour votre réactivité légendaire.", "ironie"],
+    ["Ce serait bien d’avoir des nouvelles de mon dossier, à un moment.", "flou"]],
+  ["Une copropriété", "Le syndic se fiche des copropriétaires, c’est scandaleux.",
+    ["La porte du hall ne ferme plus depuis le 15 octobre, et je vous l’ai signalé deux fois.", "Je ne me sens pas en sécurité :", "j’ai besoin que l’immeuble soit fermé.", "Pouvez-vous me dire quand la réparation est prévue ?"],
+    ["La porte du hall ne ferme toujours pas. Vous laissez tout traîner, comme d’habitude.", "reproche"],
+    ["La porte du hall est cassée depuis le 15 octobre. Réparez cette semaine, ou je retiens mes charges.", "menace"]],
+  ["Une société", "Tu prends toutes les décisions sans moi, tu me méprises.",
+    ["Tu as signé le contrat du nouveau commercial sans que nous en ayons parlé.", "Je me sens mis à l’écart :", "j’ai besoin que nous décidions ensemble des embauches.", "Peut-on fixer cette règle lundi ?"],
+    ["Tu as signé seul. Je me sens méprisé : tu fais toujours tout dans mon dos.", "reproche"],
+    ["Tu as sans doute eu raison de signer seul. Après tout, je ne connais pas grand-chose au recrutement.", "effacement"]],
+  ["Un achat en ligne", "Vous êtes des voleurs, j’ai payé pour rien !",
+    ["J’ai commandé une chaise le 3 mars, payée 120 €, et je ne l’ai jamais reçue.", "Je suis agacé,", "j’ai besoin d’être livré ou remboursé.", "Pouvez-vous me proposer l’un ou l’autre sous huit jours ?"],
+    ["Commande du 3 mars, toujours rien : félicitations pour ce service client exemplaire.", "ironie"],
+    ["Toujours pas de chaise. Remboursez-moi immédiatement, ou je vous fais une mauvaise publicité partout.", "menace"]],
+  ["Une banque", "Vous m’avez piégé avec ce crédit.",
+    ["En relisant l’offre, je découvre une assurance de 30 € par mois que je ne pensais pas avoir souscrite.", "Je suis surpris et inquiet :", "j’ai besoin de comprendre.", "Pouvez-vous m’expliquer cette ligne lors d’un rendez-vous ?"],
+    ["Cette assurance de 30 € par mois : vous profitez toujours des clients qui ne lisent pas les petites lignes.", "reproche"],
+    ["Je n’aurais pas dû signer sans tout lire, c’est entièrement ma faute. Tant pis pour moi.", "effacement"]],
+  ["Un voisinage", "Votre chien aboie sans arrêt, vous êtes inconscients.",
+    ["Votre chien a aboyé de 6 h à 7 h ces trois derniers matins.", "Je suis fatiguée,", "j’ai besoin de dormir jusqu’à 7 h.", "Pourrions-nous chercher ensemble une solution ?"],
+    ["Trois matins de suite à 6 h : quel joli réveil, merci beaucoup.", "ironie"],
+    ["Ce serait bien que ça se calme un peu, le matin, avec le chien.", "flou"]],
+  ["Le travail", "Vous annulez toujours nos entretiens, je ne compte pas pour vous.",
+    ["Notre entretien annuel a été annulé deux fois, le 4 et le 18.", "Je suis déçu,", "j’ai besoin d’échanger sur mes objectifs.", "Pouvons-nous fixer une date ferme ce mois-ci ?"],
+    ["Deux annulations, le 4 et le 18. Je comprends, vous avez sûrement plus important à faire que moi.", "effacement"],
+    ["Deux annulations déjà. Si l’entretien n’a pas lieu cette semaine, je saisis les ressources humaines.", "menace"]],
+  ["Une succession", "Tu ne réponds jamais, tu fuis comme toujours.",
+    ["Je t’ai appelé trois fois cette semaine au sujet de la succession, sans réponse.", "Je suis inquiet,", "j’ai besoin d’avancer.", "Peux-tu me dire quel moment te conviendrait pour en parler ?"],
+    ["Trois appels sans réponse. Tu fuis toujours dès que ça devient sérieux.", "reproche"],
+    ["Il faudrait qu’on parle de la succession, quand tu auras le temps.", "flou"]],
+  ["Un chantier", "Votre facture est une arnaque, 400 € de plus que le devis !",
+    ["La facture indique 4 200 €, alors que le devis signé prévoyait 3 800 €.", "Je suis surprise :", "j’ai besoin de comprendre cet écart.", "Pouvez-vous m’envoyer le détail des 400 € supplémentaires ?"],
+    ["4 200 € au lieu de 3 800 € : vous comptez vraiment bien… surtout à votre avantage.", "ironie"],
+    ["Le devis disait 3 800 €. Je ne paierai pas un centime de plus, débrouillez-vous.", "menace"]],
+  ["Une colocation", "Tu ramènes du monde tous les soirs, tu ne penses qu’à toi.",
+    ["Trois soirs cette semaine, il y avait des invités jusqu’à 1 h.", "Je suis épuisée,", "j’ai besoin de calme en semaine.", "Peut-on convenir que les soirées finissent à 23 h du dimanche au jeudi ?"],
+    ["Ne t’inquiète pas pour moi, je dormirai le week-end.", "effacement"],
+    ["Encore trois soirées cette semaine. Tu ne respectes jamais rien dans cet appartement.", "reproche"]],
+  ["Une relation commerciale", "Vous êtes de mauvais payeurs, comme d’habitude.",
+    ["La facture n° 318, de 2 400 €, est échue depuis le 30 septembre.", "Ce retard pèse sur notre trésorerie :", "nous avons besoin d’être réglés.", "Pouvez-vous nous indiquer une date de paiement d’ici vendredi ?"],
+    ["Facture n° 318 impayée. Réglez sous 48 heures, faute de quoi nous saisirons la justice sans autre préavis.", "menace"],
+    ["Quand vous aurez un moment, si ça ne vous dérange pas, pour la petite facture…", "flou"]],
+  ["Un voisinage", "Vous vous garez toujours devant mon garage, c’est du sans-gêne !",
+    ["Ce matin, votre voiture bloquait la sortie de mon garage, et j’ai été en retard au travail.", "Ça m’a contrarié :", "j’ai besoin de pouvoir sortir.", "Pouvez-vous laisser l’entrée libre ?"],
+    ["Ce matin encore, devant mon garage. La prochaine fois, je vous fais enlever par la fourrière.", "menace"],
+    ["Joli créneau ce matin, vraiment, pile devant mon garage.", "ironie"]],
+  ["Une copropriété", "Vous décidez tout entre vous, les autres ne comptent pas.",
+    ["Le ravalement a été voté sans que le devis soit joint à la convocation.", "Je suis frustré :", "j’ai besoin de pouvoir étudier les chiffres.", "Pouvez-vous me transmettre le devis avant la prochaine assemblée ?"],
+    ["Pas de devis joint, évidemment. Vous faites toujours vos petites affaires entre amis.", "reproche"],
+    ["Bon, je suppose que mon avis sur le ravalement n’intéresse personne.", "effacement"]],
+  ["Le travail", "On me refile tout le travail, c’est injuste.",
+    ["Depuis le départ de Julie, je traite seul ses dossiers en plus des miens.", "Je suis épuisé,", "j’ai besoin d’une charge tenable.", "Pouvons-nous revoir la répartition à la réunion de lundi ?"],
+    ["Ce serait bien d’y voir plus clair sur la charge de travail, un de ces jours.", "flou"],
+    ["Je fais aussi les dossiers de Julie. Si rien ne change, je me mets en arrêt.", "menace"]],
+  ["Une famille", "Tu décides toujours où on passe les fêtes, sans jamais me demander.",
+    ["Cette année, les fêtes ont été organisées chez tes parents sans qu’on en discute.", "Je suis déçue,", "j’ai besoin qu’on choisisse ensemble.", "Peut-on en parler dès cet été pour l’an prochain ?"],
+    ["Encore chez tes parents. Comme d’habitude, tu n’en fais qu’à ta tête.", "reproche"],
+    ["C’est bon, je viendrai chez tes parents, ça m’est égal.", "effacement"]],
+  ["Un garage", "Votre garage m’a rendu la voiture pire qu’avant !",
+    ["Depuis la révision du 2 juin, un voyant reste allumé et le moteur cale à froid.", "Je suis inquiet pour ma sécurité :", "j’ai besoin que ce soit vérifié.", "Pouvez-vous me recevoir cette semaine ?"],
+    ["Depuis la révision, un voyant allumé : vraiment, vous faites des miracles… à l’envers.", "ironie"],
+    ["Il faudrait peut-être y rejeter un œil, à la voiture, quand vous pourrez.", "flou"]],
+  ["Un bail", "Vous êtes encore en retard pour le loyer, vous me prenez pour une banque ?",
+    ["Le loyer de juin n’a pas été versé à ce jour.", "Je suis inquiet :", "j’en ai besoin pour rembourser mon propre prêt.", "Pouvez-vous me dire quand vous pourrez le régler, quitte à prévoir un échéancier ?"],
+    ["Le loyer de juin n’est pas versé. Vous êtes toujours en retard, c’est systématique avec vous.", "reproche"],
+    ["Le loyer de juin manque. Réglez sous trois jours, ou je lance la procédure d’expulsion.", "menace"]],
+  ["Une association", "Tu ne viens jamais aux permanences, on ne peut pas compter sur toi.",
+    ["Tu étais inscrit aux deux dernières permanences et tu n’es pas venu.", "J’ai dû les assurer seule et je suis fatiguée :", "j’ai besoin de pouvoir m’organiser.", "Peux-tu me prévenir la veille si tu ne viens pas ?"],
+    ["Deux permanences sans toi : merci pour ta présence remarquée, encore une fois.", "ironie"],
+    ["Pas grave pour les permanences, je me débrouillerai toujours.", "effacement"]],
+  ["Une société", "Tu caches les comptes, tu nous prends pour des idiots.",
+    ["Je n’ai pas reçu les comptes trimestriels demandés le 4 juin.", "Je suis inquiet :", "j’ai besoin de connaître la situation de la société.", "Peux-tu me les envoyer d’ici la fin du mois ?"],
+    ["Toujours pas de comptes depuis le 4 juin. Tu me caches tout, comme toujours.", "reproche"],
+    ["Pas de comptes depuis le 4 juin. Envoie-les demain, ou je saisis le tribunal.", "menace"]],
+  ["Un voisinage", "Vos travaux, c’est un enfer, vous n’avez aucun respect.",
+    ["Les travaux commencent vers 7 h, y compris le samedi.", "Je suis à bout,", "j’ai besoin de repos au moins le week-end.", "Pourriez-vous ne pas commencer avant 9 h le samedi ?"],
+    ["Ce serait sympa de faire un petit effort pour les travaux.", "flou"],
+    ["Les travaux à 7 h, même le samedi… Je suppose que je n’ai qu’à déménager.", "effacement"]],
+  ["Un club sportif", "Vous ne faites jamais jouer ma fille, vous avez vos chouchous.",
+    ["Ma fille n’a pas joué lors des quatre derniers matchs.", "Elle est découragée, et moi aussi :", "nous avons besoin de comprendre.", "Pourriez-vous nous expliquer vos critères lors d’un échange ?"],
+    ["Quatre matchs sur le banc : félicitations pour votre sens de l’équité.", "ironie"],
+    ["Quatre matchs sans jouer. Si ça continue, on change de club et on préviendra les autres parents.", "menace"]],
+  ["Le travail", "Encore un salaire en retard, cette boîte est une honte !",
+    ["Mon salaire d’août a été versé le 12 septembre au lieu du 1er.", "Cela m’a mis en difficulté pour mon loyer :", "j’ai besoin d’être payé à date.", "Pouvez-vous m’indiquer la cause et la date du prochain versement ?"],
+    ["Salaire versé le 12 au lieu du 1er. Vous payez toujours en retard, c’est inadmissible.", "reproche"],
+    ["Je ne voudrais surtout pas déranger pour le salaire, ce n’est pas si grave.", "effacement"]],
+  ["Un abonnement", "Vous m’avez prélevé sans mon accord, c’est du vol !",
+    ["Un prélèvement de 29,90 € apparaît le 5 octobre, alors que j’ai résilié le 20 septembre.", "Je suis contrarié :", "j’ai besoin d’être remboursé.", "Pouvez-vous me rembourser et confirmer la résiliation par écrit ?"],
+    ["Un prélèvement après ma résiliation : quelle merveilleuse surprise sur mon relevé.", "ironie"],
+    ["Ce serait bien de regarder ce prélèvement, à l’occasion.", "flou"]],
+  ["Une succession", "Tu t’es servie dans les affaires de maman avant tout le monde.",
+    ["Les bijoux de maman ne sont plus dans la maison, alors que nous n’avions rien partagé.", "Je suis triste et en colère :", "j’ai besoin qu’on fasse le partage ensemble.", "Peux-tu les rapporter, pour qu’on en parle tous les trois ?"],
+    ["Les bijoux ont disparu. Tu as toujours pensé à toi d’abord.", "reproche"],
+    ["Les bijoux ont disparu. Rapporte-les avant dimanche, ou je porte plainte.", "menace"]],
+  ["Une colocation", "Tu ne paies jamais ta part, tu vis à mes crochets.",
+    ["Je n’ai pas reçu ta part de la facture d’électricité de septembre, soit 45 €.", "Ça m’inquiète pour mon budget :", "j’ai besoin qu’on règle ça.", "Peux-tu me la virer cette semaine ?"],
+    ["Laisse, je paierai l’électricité, comme d’habitude.", "effacement"],
+    ["45 € d’électricité : tu as un vrai talent pour oublier les factures.", "ironie"]],
+  ["Une relation commerciale", "Vous changez vos prix quand ça vous arrange !",
+    ["Votre facture applique 12 € l’unité, alors que notre bon de commande indique 10 €.", "Nous sommes surpris :", "nous avons besoin de cohérence.", "Pouvez-vous corriger la facture, ou nous expliquer l’écart ?"],
+    ["12 € au lieu de 10 € : vous profitez toujours de vos clients fidèles.", "reproche"],
+    ["Ce serait bien d’être un peu plus clairs sur les prix, de manière générale.", "flou"]],
+  ["Un artisan", "Vous m’avez fait attendre toute la journée pour rien !",
+    ["J’ai posé ma journée pour votre intervention prévue à 9 h ; personne n’est venu ni n’a prévenu.", "Je suis agacé,", "j’ai besoin que ce créneau soit tenu.", "Pouvez-vous me proposer un nouveau rendez-vous ferme ?"],
+    ["Toute une journée à vous attendre : merci pour ce beau moment.", "ironie"],
+    ["Personne n’est venu. Si vous ne venez pas demain, je ne paie pas le déplacement et je laisse un avis partout.", "menace"]],
+  ["Un voisinage", "Votre barbecue enfume tout le monde, vous êtes inconscients.",
+    ["Dimanche, la fumée du barbecue est entrée chez nous pendant tout le repas.", "J’étais gênée : nous avons dû tout fermer.", "J’ai besoin de pouvoir aérer.", "Pourriez-vous déplacer le barbecue de l’autre côté du jardin ?"],
+    ["Ce serait bien de faire attention aux voisins, avec le barbecue.", "flou"],
+    ["La fumée est entrée chez nous dimanche, mais ne changez rien, ce n’est pas si grave.", "effacement"]],
+  ["Le travail", "Tu me coupes la parole sans arrêt, tu es insupportable.",
+    ["Pendant la réunion de ce matin, j’ai été interrompue trois fois avant d’avoir fini.", "Je suis frustrée,", "j’ai besoin de pouvoir exposer mon point.", "Peux-tu me laisser terminer ? Je ferai de même."],
+    ["Trois interruptions ce matin. Tu es incapable d’écouter qui que ce soit.", "reproche"],
+    ["Bravo pour ce monologue de ce matin, on a tous adoré.", "ironie"]],
+  ["Un bail", "Vous gardez ma caution pour rien, c’est malhonnête.",
+    ["Deux mois après l’état des lieux de sortie, qui ne relève aucune dégradation, je n’ai pas reçu mon dépôt de garantie de 900 €.", "J’en ai besoin pour mon nouveau logement :", "j’ai besoin de savoir quand il me sera rendu.", "Pouvez-vous me le restituer, ou m’indiquer les retenues prévues ?"],
+    ["Toujours pas de caution. Vous gardez toujours les cautions, c’est votre habitude.", "reproche"],
+    ["Toujours pas de caution. Rendez-la sous huit jours, ou je vous assigne.", "menace"]],
+  ["Un ami", "Tu ne m’as jamais rendu l’argent, tu profites de moi.",
+    ["Je t’ai prêté 500 € en mars, et nous avions parlé d’un remboursement pour l’été.", "Je suis mal à l’aise d’en reparler,", "mais j’en ai besoin.", "Peux-tu me dire quand tu pourras me rembourser, même en plusieurs fois ?"],
+    ["Oublie les 500 €, ce n’est que de l’argent.", "effacement"],
+    ["Il faudrait penser à me rendre ça, un jour.", "flou"]],
+  ["Une copropriété", "Vous marchez comme un éléphant au-dessus de chez moi.",
+    ["Le soir, entre 22 h et minuit, j’entends des pas et des chocs au plafond.", "Je dors mal depuis des semaines :", "j’ai besoin de calme la nuit.", "Pourriez-vous mettre des patins aux chaises, ou des chaussons après 22 h ?"],
+    ["Chaque soir jusqu’à minuit : quelle belle chorégraphie au-dessus de chez moi.", "ironie"],
+    ["Encore du bruit hier soir. La prochaine fois, je tape au plafond toute la nuit, vous verrez.", "menace"]],
+  ["Le travail", "Vous refusez toujours mes congés, vous favorisez les autres.",
+    ["Mes congés de la semaine du 20 ont été refusés, alors que je les avais demandés en janvier.", "Je suis déçu :", "j’avais réservé un voyage familial.", "Pouvons-nous en parler pour trouver une solution ?"],
+    ["Mes congés refusés, encore. Vous avez toujours eu vos préférés.", "reproche"],
+    ["Laissez tomber pour les congés, je n’ai pas vraiment besoin de vacances.", "effacement"]],
+  ["Un achat", "Votre canapé est une camelote, vous vendez n’importe quoi.",
+    ["Le canapé livré le 10 présente une couture ouverte sur l’accoudoir gauche.", "Je suis déçue, il est neuf :", "j’ai besoin qu’il soit réparé ou remplacé.", "Quelle solution pouvez-vous me proposer ?"],
+    ["Ce serait bien d’avoir un peu de qualité, pour ce prix-là.", "flou"],
+    ["La couture est ouverte. Reprenez-le demain, ou je vous fais un procès.", "menace"]],
+  ["Une société", "Tu n’es jamais là, c’est moi qui fais tourner la boîte.",
+    ["Ce mois-ci, j’ai assuré seul les rendez-vous clients du lundi et du vendredi.", "Je suis fatigué,", "j’ai besoin d’un partage équilibré.", "Peut-on revoir ensemble l’organisation de la semaine ?"],
+    ["Félicitations pour tes semaines de trois jours, ça doit être reposant.", "ironie"],
+    ["J’ai encore fait tous les rendez-vous. Tu ne t’investis jamais autant que moi.", "reproche"]],
+  ["Une famille", "C’est toujours moi qui m’occupe de papa, toi tu t’en fiches.",
+    ["Ces trois derniers mois, j’ai accompagné papa à tous ses rendez-vous.", "Je suis épuisée,", "j’ai besoin d’aide.", "Pourrais-tu prendre en charge ceux du mois prochain ?"],
+    ["Ce n’est rien, je m’occuperai toujours de papa.", "effacement"],
+    ["Trois mois de rendez-vous seule. Si tu ne t’en occupes pas, je préviens toute la famille de ton comportement.", "menace"]],
+  ["Une caisse de retraite", "Vous perdez mes papiers, vous êtes nuls.",
+    ["J’ai envoyé mon dossier complet le 3 avril, et l’on me redemande les mêmes pièces.", "Je suis découragée :", "j’ai besoin que mon dossier avance.", "Pouvez-vous me confirmer les pièces réellement manquantes ?"],
+    ["On me redemande les mêmes pièces. Vous perdez toujours tout, c’est incroyable.", "reproche"],
+    ["Mêmes pièces redemandées : bravo pour votre sens de l’organisation.", "ironie"]],
+  ["Une colocation", "Tu mets le chauffage à fond, tu te fiches de la facture.",
+    ["Le chauffage reste réglé à 24 degrés jour et nuit, et notre facture a doublé.", "Ça m’inquiète :", "j’ai besoin qu’on maîtrise ce coût.", "Peut-on se mettre d’accord sur 20 degrés ?"],
+    ["Ce serait bien de faire un geste pour la planète, avec le chauffage.", "flou"],
+    ["La facture a doublé. Je te ferai payer toute la différence, tu vas voir.", "menace"]],
+  ["Un club", "Vous augmentez la cotisation sans prévenir, c’est du racket.",
+    ["La cotisation passe de 120 à 180 €, et je l’ai découvert au moment de payer.", "Je suis surpris :", "j’ai besoin de comprendre.", "Pouvez-vous m’expliquer ce qui justifie cette hausse ?"],
+    ["180 € au lieu de 120. Vous faites toujours passer les décisions en douce.", "reproche"],
+    ["Bon, je paierai les 180 €, je n’ai pas vraiment le choix.", "effacement"]],
+  ["Un chantier", "Vous avez laissé un chantier dégoûtant, vous n’avez aucun respect.",
+    ["Après votre intervention, des gravats et des sacs de plâtre sont restés dans le jardin.", "Je suis contrariée :", "je ne peux pas les évacuer seule.", "Pouvez-vous repasser les enlever cette semaine ?"],
+    ["Des gravats partout : merci pour ces jolis souvenirs dans le jardin.", "ironie"],
+    ["Il faudrait peut-être nettoyer un peu, un jour, après vos passages.", "flou"]],
+  ["Le travail", "Vous m’envoyez des mails à minuit, vous n’avez aucun respect.",
+    ["Je reçois souvent des demandes après 22 h, avec une réponse attendue le lendemain matin.", "Je suis épuisé :", "j’ai besoin de déconnecter le soir.", "Pouvons-nous convenir d’un délai de réponse au lendemain midi ?"],
+    ["Encore des mails à minuit. Vous ne respectez jamais la vie privée des équipes.", "reproche"],
+    ["Encore des mails à minuit. Continuez comme ça, et je saisis l’inspection du travail.", "menace"]],
+  ["Une vente", "Vous m’avez vendu une épave en connaissance de cause !",
+    ["Deux semaines après l’achat, le garage relève une boîte de vitesses usée, absente du contrôle que vous m’aviez remis.", "Je suis inquiet et déçu :", "j’ai besoin qu’on trouve une solution.", "Pouvons-nous en parler cette semaine ?"],
+    ["Je n’aurais jamais dû vous faire confiance pour cette voiture, c’est de ma faute.", "effacement"],
+    ["La boîte de vitesses est usée. Vous mentez depuis le début, comme tous les vendeurs.", "reproche"]],
+  ["Une copropriété", "Vous laissez votre chien salir l’ascenseur, c’est répugnant.",
+    ["Ces derniers jours, j’ai trouvé l’ascenseur sali deux fois après le passage de votre chien.", "Ça me dérange :", "j’ai besoin que les parties communes restent propres.", "Pourriez-vous y être attentif ?"],
+    ["L’ascenseur encore sali : quel plaisir de le partager avec vous.", "ironie"],
+    ["Ascenseur sali deux fois. Si je le revois, je fais un signalement au syndic, photos à l’appui.", "menace"]],
+  ["Une famille", "Tu oublies toujours mon anniversaire, tu te moques de moi.",
+    ["Mardi, c’était mon anniversaire, et je n’ai pas eu de nouvelles de ta part.", "J’ai été triste :", "j’ai besoin de sentir que je compte.", "Est-ce qu’on pourrait se voir ce week-end ?"],
+    ["Ce n’est pas grave pour mardi, je n’aime pas les anniversaires de toute façon.", "effacement"],
+    ["Pas un message mardi. Tu ne penses jamais à personne d’autre que toi.", "reproche"]],
+  ["Un client", "Vous changez d’avis tout le temps, impossible de travailler avec vous.",
+    ["Le cahier des charges a changé trois fois depuis la signature, et les délais n’ont pas bougé.", "Je suis sous pression :", "j’ai besoin de stabilité.", "Pouvons-nous figer le périmètre et revoir le calendrier ensemble ?"],
+    ["Trois versions du cahier des charges : bravo pour votre constance, on ne s’ennuie jamais.", "ironie"],
+    ["Ce serait bien d’être un peu plus clair dans vos demandes.", "flou"]],
+  ["Un voisinage", "Votre arbre bouche mes gouttières, vous ne faites jamais rien.",
+    ["Les feuilles de votre chêne ont bouché ma gouttière deux fois cet automne.", "Je suis agacé : j’ai dû payer un nettoyage.", "J’ai besoin qu’on trouve une solution.", "Pourriez-vous faire élaguer les branches qui débordent ?"],
+    ["Encore la gouttière bouchée. Vous laissez toujours tout pousser n’importe comment.", "reproche"],
+    ["Gouttière bouchée deux fois. Élaguez avant la fin du mois, ou je coupe moi-même.", "menace"]],
+  ["Le travail", "Tu ne me dis jamais merci, je suis transparente.",
+    ["Le projet livré vendredi m’a demandé deux semaines de soirées, et rien n’en a été dit en réunion.", "Je suis déçue :", "j’ai besoin que cet effort soit reconnu.", "Pourrions-nous en parler lors de notre point de jeudi ?"],
+    ["Pas un mot vendredi. Je suis transparente : tu ne me vois jamais.", "reproche"],
+    ["Peu importe la réunion de vendredi, je fais ça pour moi.", "effacement"]],
+  ["Une assurance", "Votre assurance ne sert à rien, vous ne payez jamais.",
+    ["Votre courrier du 20 mai refuse la prise en charge du dégât des eaux, sans en préciser le motif.", "Je suis découragé :", "j’ai besoin de comprendre.", "Pouvez-vous m’indiquer la clause appliquée ?"],
+    ["Un refus le 20 mai : félicitations, vous êtes toujours là… pour encaisser.", "ironie"],
+    ["Refus du 20 mai. Payez, ou je résilie tous mes contrats et je préviens une association de consommateurs.", "menace"]],
+  ["Une colocation", "Ton copain vit ici sans payer, tu exagères.",
+    ["Ton compagnon dort ici cinq soirs par semaine depuis septembre.", "Je me sens moins chez moi, et nos charges augmentent :", "j’ai besoin qu’on en parle.", "Peut-on trouver un arrangement, sur la fréquence ou sur les frais ?"],
+    ["Ce serait bien de faire un peu attention, avec ton copain.", "flou"],
+    ["Cinq soirs par semaine. Tu fais toujours passer ton couple avant tout.", "reproche"]],
+  ["Une association", "Tu as organisé la sortie sans moi, tu veux me mettre à l’écart.",
+    ["J’ai appris par d’autres membres que la sortie de juin était organisée, sans avoir été consulté.", "Je suis blessé :", "j’ai besoin d’être associé à l’organisation.", "Peut-on en parler avant la prochaine sortie ?"],
+    ["Je vois que je ne sers plus à rien ici, pour la sortie comme pour le reste.", "effacement"],
+    ["Prévenu le dernier pour la sortie de juin : quelle belle surprise.", "ironie"]],
+  ["Un bail commercial", "Votre augmentation de loyer est délirante, vous voulez me faire fermer.",
+    ["La révision porte le loyer de 1 500 à 1 900 €, soit 27 % de hausse.", "Je suis inquiet pour l’avenir de la librairie :", "j’ai besoin de comprendre le calcul.", "Pouvez-vous m’envoyer le détail de l’indice appliqué ?"],
+    ["1 900 € au lieu de 1 500. Vous cherchez toujours à profiter des commerçants.", "reproche"],
+    ["Loyer porté à 1 900 €. Baissez-le, ou je ne paierai plus que l’ancien.", "menace"]],
+];
+
+/* ——— utilitaires ——— */
+const $ = (id) => document.getElementById(id);
+const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const load = () => { try { return JSON.parse(localStorage.getItem(KEY) || "null"); } catch { return null; } };
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* indisponible */ } };
+const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+(function spiral() {
+  const p = []; for (let i = 0; i <= 140; i++) { const t = i / 140, th = t * 3.4 * 2 * Math.PI, r = t * 10.5;
+    p.push(`${(12 + r * Math.cos(th - Math.PI / 2)).toFixed(2)},${(12 + r * Math.sin(th - Math.PI / 2)).toFixed(2)}`); }
+  $("spiral").setAttribute("points", p.join(" "));
+})();
+const LAB = [["o", "le fait"], ["s", "le ressenti"], ["b", "le besoin"], ["d", "la demande"]];
+const osbd = (parts) => parts.map((t, i) => `<span class="seg ${LAB[i][0]}"><span class="tx">${esc(t)}</span><span class="lb">${LAB[i][1]}</span></span>`).join("");
+$("demo").innerHTML = osbd(DECK[1][2]);
+
+const newCycle = () => ({ order: shuffle([...DECK.keys()]), game: 0, st: { ok: 0, n: 0, traps: {} } });
+let S = load() || { best: null, cycle: newCycle() };
+if (!S.cycle) S.cycle = newCycle();
+
+let round = [], idx = 0, answers = [], locked = false, opts = [];
+
+function show(id) {
+  ["s-intro", "s-play", "s-end", "s-synth"].forEach((s) => $(s).classList.toggle("on", s === id));
+  $("dots").style.display = id === "s-play" ? "flex" : "none";
+  if (id !== "s-play") $("counter").textContent = "";
+  window.scrollTo(0, 0);
+}
+function refreshIntro() {
+  const g = S.cycle.game;
+  $("cycle").innerHTML = g >= GAMES ? "Vos dix parties sont terminées : votre synthèse est prête."
+    : g === 0 ? "Dix parties de six situations : soixante messages, jamais deux fois le même."
+    : `Partie <b>${g + 1}</b> sur ${GAMES}. Encore ${GAMES - g} avant votre synthèse.`;
+  $("start").textContent = g >= GAMES ? "Recommencer dix parties" : g === 0 ? "Commencer" : `Jouer la partie ${g + 1}`;
+  $("open-synth").hidden = g < GAMES;
+}
+
+function newGame() {
+  if (S.cycle.game >= GAMES) { S.cycle = newCycle(); save(); }
+  const g = S.cycle.game;
+  round = S.cycle.order.slice(g * ROUND, g * ROUND + ROUND).map((i) => DECK[i]);
+  idx = 0; answers = [];
+  $("dots").innerHTML = round.map(() => "<i></i>").join("");
+  show("s-play"); deal();
+}
+
+function deal() {
+  locked = false;
+  const c = round[idx];
+  $("ctx").textContent = c[0];
+  $("raw").textContent = `«\u00a0${c[1]}\u00a0»`;
+  opts = shuffle([{ t: c[2].join(" "), good: true }, { t: c[3][0], trap: c[3][1] }, { t: c[4][0], trap: c[4][1] }]);
+  $("opts").innerHTML = opts.map((o, i) => `<button class="opt" data-i="${i}" data-l="${"ABC"[i]}">${esc(o.t)}</button>`).join("");
+  $("verdict").classList.remove("on");
+  $("counter").innerHTML = `Partie ${S.cycle.game + 1}, situation <strong>${idx + 1}</strong> sur ${ROUND}`;
+  [...$("dots").children].forEach((d, i) => d.classList.toggle("now", i === idx));
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function choose(i) {
+  if (locked) return; locked = true;
+  const o = opts[i], c = round[idx];
+  answers.push({ ok: !!o.good, trap: o.trap || null });
+  const btns = $("opts").querySelectorAll(".opt");
+  btns.forEach((b, k) => { b.disabled = true; b.classList.add(opts[k].good ? "good" : k === i ? "bad" : "dim"); });
+  $("dots").children[idx].className = o.good ? "ok" : "ko";
+  $("v-title").textContent = o.good ? "Oui : celle-ci rouvre le dialogue." : `Non : ${TRAPS[o.trap][0].toLowerCase()}.`;
+  $("v-why").textContent = o.good ? "Elle décrit un fait précis, dit ce que vous ressentez, nomme votre besoin et propose une demande concrète. L’autre peut y répondre sans perdre la face." : TRAPS[o.trap][1];
+  $("verdict").style.setProperty("--v", o.good ? "var(--ok)" : "var(--ko)");
+  $("v-model").innerHTML = osbd(c[2]);
+  $("next").textContent = idx === ROUND - 1 ? "Voir mon résultat" : "Situation suivante";
+  $("verdict").classList.add("on");
+  setTimeout(() => { $("verdict").scrollIntoView({ behavior: "smooth", block: "nearest" }); $("next").focus({ preventScroll: true }); }, 60);
+}
+
+function next() { if (idx < ROUND - 1) { idx++; deal(); } else finish(); }
+
+const ADVICE = {
+  reproche: ["Vous retombez dans le reproche.", "Commencez par un fait daté plutôt que par « tu es » ou « toujours » : on peut contester un jugement, pas une date."],
+  effacement: ["Vous avez tendance à vous effacer.", "Votre besoin compte autant que celui de l’autre. Une demande claire n’est pas une agression : c’est ce qui permet à l’autre d’agir."],
+  menace: ["La menace vous tente.", "Elle peut obtenir un résultat rapide, mais elle fait monter le conflit d’une marche. Gardez-la pour plus tard, et commencez par une demande."],
+  ironie: ["L’ironie vous attire.", "Elle soulage sur le moment, mais elle blesse sans rien demander. L’autre retiendra la pique, pas votre besoin."],
+  flou: ["Vos demandes restent floues.", "Une demande qui marche dit quoi, et pour quand : « une date de reprise d’ici vendredi », pas « que ça avance un peu »."],
+};
+const lessonFor = (traps) => {
+  const top = Object.entries(traps).sort((a, b) => b[1] - a[1])[0];
+  return top ? ADVICE[top[0]] : ["Vous savez déjà écrire la phrase qui apaise.", "Fait, ressenti, besoin, demande : vous reconnaissez les quatre temps, et vous évitez les pièges."];
+};
+
+function finish() {
+  const ok = answers.filter((a) => a.ok).length;
+  if (!(S.best >= ok)) S.best = ok;
+  const st = S.cycle.st, traps = {};
+  answers.forEach((a) => { st.n++; if (a.ok) st.ok++; else { traps[a.trap] = (traps[a.trap] || 0) + 1; st.traps[a.trap] = (st.traps[a.trap] || 0) + 1; } });
+  S.cycle.game++; save();
+  const last = S.cycle.game >= GAMES;
+  $("score").innerHTML = `${ok}<small> / ${ROUND}</small>`;
+  $("t-end").textContent = ok === ROUND ? "Six messages, six portes ouvertes." : ok >= 4 ? "La plupart de vos messages rouvrent le dialogue." : "Les pièges sont tentants : c’est souvent ce qu’on écrit sous le coup de l’émotion.";
+  const L = lessonFor(traps);
+  $("lesson").innerHTML = `<b>${L[0]}</b>${L[1]}`;
+  $("to-synth").hidden = !last; $("again").hidden = last;
+  $("again").textContent = `Partie suivante (${S.cycle.game + 1} sur ${GAMES})`;
+  $("toast").textContent = last ? "Dix parties terminées : votre synthèse est prête." : "";
+  show("s-end"); (last ? $("to-synth") : $("again")).focus({ preventScroll: true });
+}
+
+function synthesis() {
+  const st = S.cycle.st, miss = st.n - st.ok;
+  $("sy-score").textContent = `${st.ok} bonnes réponses sur ${st.n}. ${miss ? `Vos ${miss} erreurs se répartissent ainsi :` : "Aucun piège ne vous a eu."}`;
+  const max = Math.max(1, ...Object.values(st.traps));
+  $("sy-bars").innerHTML = Object.keys(TRAPS).map((k) => {
+    const v = st.traps[k] || 0;
+    return `<li><span>${TRAPS[k][0]}</span><span class="tr"><span style="width:${(100 * v) / max}%"></span></span><span class="v">${v}</span></li>`;
+  }).join("");
+  const L = lessonFor(st.traps);
+  $("sy-lesson").innerHTML = `<b>${L[0]}</b>${L[1]}`;
+  if (TOOL_URL) { $("sy-tool").href = TOOL_URL; $("sy-tool").hidden = false; }
+  show("s-synth");
+}
+
+async function share() {
+  const ok = answers.filter((a) => a.ok).length;
+  const txt = `J’ai trouvé ${ok} phrases sur ${ROUND} qui rouvrent le dialogue, dans « La phrase qui apaise », le jeu Révéla. Et vous, que répondriez-vous ?`;
+  try {
+    if (navigator.share) { await navigator.share({ title: "La phrase qui apaise", text: txt, url: SHARE_URL }); return; }
+    await navigator.clipboard.writeText(`${txt} ${SHARE_URL}`);
+    $("toast").textContent = "Texte copié : collez-le où vous voulez.";
+  } catch (e) {
+    if (e && e.name === "AbortError") return;
+    $("toast").textContent = "Partage indisponible ici. Faites une capture d’écran de votre score.";
+  }
+}
+
+$("opts").addEventListener("click", (e) => { const b = e.target.closest(".opt"); if (b && !b.disabled) choose(+b.dataset.i); });
+$("start").onclick = newGame; $("again").onclick = newGame; $("next").onclick = next; $("share").onclick = share;
+$("to-synth").onclick = synthesis; $("open-synth").onclick = synthesis;
+$("restart").onclick = () => { S.cycle = newCycle(); save(); refreshIntro(); show("s-intro"); };
+$("home").onclick = (e) => { e.preventDefault(); refreshIntro(); show("s-intro"); };
+document.addEventListener("keydown", (e) => {
+  if (!$("s-play").classList.contains("on")) return;
+  const k = { a: 0, b: 1, c: 2, "1": 0, "2": 1, "3": 2 }[e.key.toLowerCase()];
+  if (k !== undefined && !locked) { e.preventDefault(); choose(k); }
+  else if ((e.key === "Enter" || e.key === " ") && locked && document.activeElement !== $("next")) { e.preventDefault(); next(); }
+});
+refreshIntro(); show("s-intro");
+</script>
+</body>
+</html>

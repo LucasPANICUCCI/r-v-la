@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="description" content="Fait ou ressenti ? Un jeu Révéla, par DSP Avocats : apprenez à séparer les faits, les interprétations et les émotions." />
+<meta name="theme-color" content="#0E1A2F" />
+<title>Fait ou ressenti ? — un jeu Révéla</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400;1,500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --table: #0E1A2F; --table-2: #15253F; --card: #F6F0E3; --card-edge: #E4D9C3;
+  --ink: #1B2A4A; --muted: #6E6A5E; --gold: #C9A45C; --gold-soft: #E2C88F; --cream: #F3ECDD;
+  --fait: #8FB3D9; --interp: #C9A45C; --emotion: #D58B7E; --ok: #7FA86A; --ko: #C0574B;
+  --serif: "Cormorant Garamond", Garamond, "Times New Roman", serif; --sans: "DM Sans", "Helvetica Neue", Arial, sans-serif;
+  box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+:root:not([data-theme="light"]) { color-scheme: dark; }
+*, *::before, *::after { box-sizing: inherit; }
+html, body { height: 100%; }
+body {
+  margin: 0; background: radial-gradient(120% 80% at 50% 30%, var(--table-2), var(--table) 70%) fixed var(--table);
+  color: var(--cream); font-family: var(--sans); -webkit-font-smoothing: antialiased; overscroll-behavior: none;
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.app { max-width: 520px; height: 100%; margin: 0 auto; padding: 16px 20px 18px; display: flex; flex-direction: column; }
+
+/* en-tête */
+.top { display: flex; align-items: center; justify-content: space-between; min-height: 40px; }
+.brand { display: inline-flex; align-items: center; gap: 9px; color: var(--cream); text-decoration: none; }
+.brand svg { color: var(--gold); }
+.brand span { font-family: var(--serif); font-size: 21px; font-weight: 600; letter-spacing: .08em; }
+.counter { font-size: 14px; color: #B9BFCC; }
+.counter strong { color: var(--cream); font-weight: 600; }
+.dots { display: flex; gap: 5px; margin: 14px 0 0; }
+.dots i { flex: 1; height: 3px; border-radius: 2px; background: rgba(243,236,221,.14); transition: background .3s; }
+.dots i.ok { background: var(--ok); } .dots i.ko { background: var(--ko); } .dots i.now { background: var(--cream); }
+
+/* écrans */
+.screen { flex: 1; display: none; flex-direction: column; min-height: 0; }
+.screen.on { display: flex; }
+
+/* accueil */
+.intro { justify-content: center; gap: 22px; padding: 10px 0; }
+.title { font-family: var(--serif); font-weight: 500; font-size: clamp(50px, 14vw, 68px); line-height: .95; margin: 0; letter-spacing: -.01em; }
+.title em { font-style: italic; color: var(--gold-soft); font-weight: 400; }
+.fan { position: relative; height: 210px; margin: 6px 0 4px; }
+.fan .c { position: absolute; left: 50%; top: 10px; width: 78%; max-width: 360px; height: 170px; margin-left: -39%; border-radius: 16px;
+  background: var(--card); color: var(--ink); box-shadow: 0 18px 40px rgba(0,0,0,.35); padding: 20px 22px; display: flex; flex-direction: column; justify-content: space-between; }
+@media (min-width: 470px) { .fan .c { margin-left: -180px; } }
+.fan .c:nth-child(1) { transform: rotate(-8deg) translate(-18px, 10px); opacity: .55; }
+.fan .c:nth-child(2) { transform: rotate(5deg) translate(16px, 4px); opacity: .75; }
+.fan .c:nth-child(3) { transform: rotate(-1deg); }
+.fan .c p { margin: 0; font-family: var(--serif); font-size: 25px; line-height: 1.25; font-style: italic; }
+.fan .c small { font-size: 12.5px; color: var(--muted); }
+.legend { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.legend li { display: grid; grid-template-columns: 142px 1fr; gap: 12px; align-items: baseline; font-size: 15px; color: #D8D3C6; }
+.legend b { font-family: var(--serif); font-size: 20px; font-weight: 600; }
+.legend .f b { color: var(--fait); } .legend .i b { color: var(--interp); } .legend .e b { color: var(--emotion); }
+.lede { margin: 0; font-size: 16px; line-height: 1.55; color: #D8D3C6; max-width: 34em; }
+.btn { border: 1px solid var(--cream); background: transparent; border-radius: 999px; padding: 14px 26px; font-size: 16px; font-weight: 500; }
+.btn.main { background: var(--gold); border-color: var(--gold); color: var(--table); font-weight: 600; }
+.btn.main:hover { background: var(--gold-soft); }
+.btn.quiet { border-color: rgba(243,236,221,.35); }
+.btn.quiet:hover { border-color: var(--cream); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+.best { font-size: 13.5px; color: #9EA6B6; margin: -8px 0 0; }
+
+/* jeu */
+.play { padding-top: 6px; }
+.zone { position: relative; flex: 1; min-height: 300px; display: flex; align-items: center; justify-content: center; touch-action: none; }
+.hint { position: absolute; font-family: var(--serif); font-size: 22px; font-weight: 600; opacity: .28; transition: opacity .15s, transform .15s; pointer-events: none; }
+.hint.l { left: -2px; top: 50%; transform: translateY(-50%) rotate(-90deg); color: var(--fait); }
+.hint.r { right: -6px; top: 50%; transform: translateY(-50%) rotate(90deg); color: var(--emotion); }
+.hint.u { top: 2px; left: 50%; transform: translateX(-50%); color: var(--interp); }
+.hint.hot { opacity: 1; }
+.card {
+  position: relative; width: 84%; max-width: 380px; min-height: 290px; border-radius: 20px; background: var(--card); color: var(--ink);
+  box-shadow: 0 24px 60px rgba(0,0,0,.4), inset 0 0 0 1px var(--card-edge); padding: 26px 26px 22px; display: flex; flex-direction: column;
+  user-select: none; -webkit-user-select: none; will-change: transform; transition: transform .28s cubic-bezier(.2,.8,.2,1), opacity .28s;
+}
+.card.drag { transition: none; cursor: grabbing; }
+.card .ctx { font-size: 13px; color: var(--muted); margin: 0 0 auto; }
+.card .phrase { font-family: var(--serif); font-size: clamp(28px, 8vw, 34px); line-height: 1.22; margin: 18px 0; font-weight: 500; }
+.card .phrase::before { content: "«\00a0"; color: var(--gold); } .card .phrase::after { content: "\00a0»"; color: var(--gold); }
+.card .how { font-size: 12.5px; color: var(--muted); margin: auto 0 0; }
+.card .tint { position: absolute; inset: 0; border-radius: 20px; pointer-events: none; opacity: 0; transition: opacity .1s; }
+.choices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px; }
+.choices button { border: 1px solid rgba(243,236,221,.22); background: rgba(243,236,221,.05); border-radius: 14px; padding: 14px 4px 12px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.choices button b { font-family: var(--serif); font-size: 20px; font-weight: 600; }
+.choices button small { font-size: 11.5px; color: #9EA6B6; }
+.choices .f b { color: var(--fait); } .choices .i b { color: var(--interp); } .choices .e b { color: var(--emotion); }
+.choices button:hover { background: rgba(243,236,221,.1); }
+.choices button:disabled { opacity: .35; cursor: default; }
+
+/* verdict */
+.verdict { margin-top: 14px; padding: 16px 18px; border-radius: 16px; background: rgba(243,236,221,.06); border-left: 3px solid var(--ok); display: none; }
+.verdict.on { display: block; animation: rise .25s ease-out; }
+.verdict.ko { border-left-color: var(--ko); }
+.verdict h2 { margin: 0 0 4px; font-family: var(--serif); font-size: 24px; font-weight: 600; }
+.verdict p { margin: 0 0 12px; font-size: 15px; line-height: 1.5; color: #DCD7CB; }
+.verdict .btn { padding: 11px 20px; font-size: 15px; }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* résultat */
+.end { gap: 18px; padding: 12px 0; overflow-y: auto; }
+.score { font-family: var(--serif); font-size: 92px; line-height: .9; margin: 6px 0 0; font-weight: 500; }
+.score small { font-size: 34px; color: #9EA6B6; }
+.read { font-family: var(--serif); font-size: 24px; line-height: 1.3; margin: 0; }
+.bars { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.bars li { display: grid; grid-template-columns: 116px 1fr 40px; gap: 12px; align-items: center; font-size: 14.5px; color: #D8D3C6; }
+.bars .t { height: 6px; border-radius: 3px; background: rgba(243,236,221,.12); overflow: hidden; }
+.bars .t span { display: block; height: 100%; border-radius: 3px; }
+.bars .v { text-align: right; color: var(--cream); font-weight: 600; }
+.lesson { margin: 0; padding: 16px 18px; border-radius: 16px; background: var(--card); color: var(--ink); font-size: 15.5px; line-height: 1.5; }
+.lesson b { font-family: var(--serif); font-size: 19px; display: block; margin-bottom: 4px; }
+.toast { min-height: 20px; font-size: 13.5px; color: var(--gold-soft); margin: 0; }
+.foot { font-size: 12px; color: #8D95A6; line-height: 1.5; margin: 6px 0 0; }
+.foot a { color: #B9BFCC; }
+
+.verdict .emo { margin: -2px 0 8px; font-size: 14px; color: var(--emotion); }
+.cycle { font-size: 14px; color: #B9BFCC; margin: -6px 0 0; }
+.cycle b { color: var(--cream); }
+.synth { gap: 18px; padding: 8px 0 12px; overflow-y: auto; }
+.synth h1 { font-family: var(--serif); font-weight: 500; font-size: clamp(38px, 10vw, 48px); line-height: 1.02; margin: 4px 0 0; }
+.synth h2 { font-family: var(--serif); font-weight: 600; font-size: 25px; margin: 8px 0 0; }
+.rule { background: var(--card); color: var(--ink); border-radius: 16px; padding: 16px 18px; border-top: 4px solid var(--k); }
+.rule h3 { margin: 0 0 4px; font-family: var(--serif); font-size: 24px; font-weight: 600; color: var(--ink); }
+.rule p { margin: 0 0 8px; font-size: 15px; line-height: 1.5; }
+.rule .test { font-family: var(--serif); font-style: italic; font-size: 18px; margin: 0 0 8px; }
+.rule .ex { margin: 0; font-size: 14px; color: #4A4F60; }
+.traps { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.traps li { padding: 12px 14px; border-left: 2px solid var(--gold); background: rgba(243,236,221,.05); font-size: 15px; line-height: 1.5; color: #DCD7CB; }
+.traps b { color: var(--cream); }
+@media (prefers-reduced-motion: reduce) { .card, .verdict.on { transition: none; animation: none; } }
+@media (max-height: 700px) { .card { min-height: 240px; } .fan { height: 180px; } .fan .c { height: 150px; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <a class="brand" href="#" id="home" aria-label="Retour à l’accueil du jeu">
+      <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><polyline id="spiral" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"></polyline></svg>
+      <span>Révéla</span>
+    </a>
+    <span class="counter" id="counter" aria-live="polite"></span>
+  </header>
+  <div class="dots" id="dots" aria-hidden="true"></div>
+
+  <!-- accueil -->
+  <section class="screen intro on" id="s-intro" aria-labelledby="t-intro">
+    <h1 class="title" id="t-intro">Fait ou<br><em>ressenti ?</em></h1>
+    <div class="fan" aria-hidden="true">
+      <div class="c"><p>Il le fait exprès.</p><small>Interprétation</small></div>
+      <div class="c"><p>Je suis en colère.</p><small>Émotion</small></div>
+      <div class="c"><p>Le devis a été signé le 12 mars.</p><small>Fait</small></div>
+    </div>
+    <p class="lede">Dans un conflit, tout se mélange. Dix phrases par partie, une seule question : est-ce un fait, une interprétation ou une émotion ? Au bout de dix parties, une synthèse vous attend.</p>
+    <ul class="legend">
+      <li class="f"><b>Fait</b>Ce qu’une caméra aurait filmé, ce qu’un document prouve.</li>
+      <li class="i"><b>Interprétation</b>Ce que vous en concluez : une intention, un jugement.</li>
+      <li class="e"><b>Émotion</b>Ce que vous ressentez, vous.</li>
+    </ul>
+    <p class="cycle" id="cycle"></p>
+    <div class="row"><button class="btn main" id="start">Commencer la partie</button><button class="btn quiet" id="open-synth" hidden>Voir ma synthèse</button></div>
+    <p class="best" id="best"></p>
+  </section>
+
+  <!-- jeu -->
+  <section class="screen play" id="s-play" aria-label="Partie en cours">
+    <div class="zone" id="zone">
+      <span class="hint l" id="h-l">Fait</span>
+      <span class="hint u" id="h-u">Interprétation</span>
+      <span class="hint r" id="h-r">Émotion</span>
+      <article class="card" id="card" tabindex="-1" aria-live="polite">
+        <div class="tint" id="tint"></div>
+        <p class="ctx" id="ctx"></p>
+        <p class="phrase" id="phrase"></p>
+        <p class="how">Glissez la carte, ou choisissez ci-dessous.</p>
+      </article>
+    </div>
+    <div class="choices" id="choices">
+      <button class="f" data-k="fait"><b>Fait</b><small>glisser à gauche</small></button>
+      <button class="i" data-k="interp"><b>Interprétation</b><small>glisser en haut</small></button>
+      <button class="e" data-k="emotion"><b>Émotion</b><small>glisser à droite</small></button>
+    </div>
+    <div class="verdict" id="verdict" role="status">
+      <h2 id="v-title"></h2>
+      <p class="emo" id="v-emo" hidden></p>
+      <p id="v-why"></p>
+      <button class="btn main" id="next">Carte suivante</button>
+    </div>
+  </section>
+
+  <!-- résultat -->
+  <section class="screen end" id="s-end" aria-labelledby="t-end">
+    <p class="score" id="score"></p>
+    <h2 class="read" id="t-end"></h2>
+    <ul class="bars" id="bars"></ul>
+    <p class="lesson" id="lesson"></p>
+    <div class="row">
+      <button class="btn main" id="to-synth" hidden>Découvrir ma synthèse</button>
+      <button class="btn main" id="again">Partie suivante</button>
+      <button class="btn quiet" id="share">Partager mon score</button>
+      <a class="btn quiet" id="tool" href="#" hidden>Essayer le Parcours du ressenti</a>
+    </div>
+    <p class="toast" id="toast" role="status"></p>
+    <p class="foot">Un jeu Révéla, par SELARL DSP Avocats, Barreau de Nice. Jeu pédagogique, sans collecte de données : votre meilleur score reste sur cet appareil. <a href="mailto:contact@dsp-avocats.fr">contact@dsp-avocats.fr</a> · <a href="/">Tous les outils et jeux Révéla</a> · <a href="/mentions-legales/">Mentions légales</a></p>
+  </section>
+  <section class="screen synth" id="s-synth" aria-labelledby="t-synth">
+    <h1 id="t-synth">Votre synthèse, après dix parties</h1>
+    <p class="lede" id="sy-score"></p>
+    <ul class="bars" id="sy-bars"></ul>
+    <h2>Ce qu’il faut retenir</h2>
+    <div class="rule" style="--k: var(--fait)"><h3>Le fait</h3><p class="test">Une caméra aurait-elle pu le filmer, un document le prouver ?</p><p>Un fait se date, se mesure ou se montre. Il n’accuse personne : c’est la matière d’un dossier.</p><p class="ex">« Il m’a menacé » devient un fait quand on cite ses mots : « Il a dit : vous allez le regretter. »</p></div>
+    <div class="rule" style="--k: var(--interp)"><h3>L’interprétation</h3><p class="test">Est-ce que je prête une intention, je juge, je généralise ?</p><p>« Exprès », « jamais », « toujours », « malhonnête » : ce sont des lectures de la situation. Elles sont légitimes, mais elles se discutent.</p><p class="ex">« Le chantier est en retard » devient un fait avec une date : « prévu le 1er mars, toujours pas terminé ».</p></div>
+    <div class="rule" style="--k: var(--emotion)"><h3>L’émotion</h3><p class="test">Est-ce que je parle de moi, avec un mot qui dit ce que je ressens ?</p><p>Colère, peur, tristesse, dégoût, surprise, joie, confiance, attente : chacune existe à plusieurs degrés. La nommer précisément en atténue l’emprise.</p><p class="ex">« Je suis furieux » dit une rage ; « je suis agacé » dit une contrariété. Le mot juste compte.</p></div>
+    <h2>Les pièges à connaître</h2>
+    <ul class="traps">
+      <li><b>« Trahi », « ignoré », « abandonné », « rejeté », « manipulé »</b> ressemblent à des émotions, mais décrivent ce que l’autre aurait fait. Dessous, il y a souvent de la colère ou de la tristesse.</li>
+      <li><b>« Je sens que », « j’ai l’impression que »</b> annoncent une interprétation, pas une émotion.</li>
+      <li><b>Des mots cités exactement</b> sont un fait ; leur résumé (« il m’a insulté ») est déjà une lecture.</li>
+    </ul>
+    <h2>Votre point de vigilance</h2>
+    <p class="lesson" id="sy-lesson"></p>
+    <div class="row">
+      <a class="btn main" id="sy-tool" href="#" hidden>Essayer le Parcours du ressenti</a>
+      <button class="btn quiet" id="restart">Recommencer dix parties</button>
+    </div>
+    <p class="foot">Repères : la roue des émotions de Robert Plutchik (1980) et la communication non violente de Marshall Rosenberg.</p>
+  </section>
+</div>
+
+<script>
+/* ——— réglages ——— */
+const TOOL_URL = "/parcours/";            // lien du Parcours du ressenti, à renseigner au déploiement
+const SHARE_URL = location.href;
+const ROUND = 10, GAMES = 10;
+const KEY = "revela-fait-ou-ressenti-v2";
+
+const LABEL = { fait: "un fait", interp: "une interprétation", emotion: "une émotion" };
+const NAME = { fait: "Fait", interp: "Interprétation", emotion: "Émotion" };
+const COLOR = { fait: "var(--fait)", interp: "var(--interp)", emotion: "var(--emotion)" };
+
+/* ——— les 100 cartes ———
+   p : phrase · c : contexte · k : catégorie · w : explication
+   e (émotions seulement) : [l’émotion précise, sa place sur la roue de Plutchik] */
+const F = (p, c, w) => ({ p, c, k: "fait", w });
+const I = (p, c, w) => ({ p, c, k: "interp", w });
+const E = (p, c, e, r, w) => ({ p, c, k: "emotion", e: [e, r], w });
+
+const DECK = [
+  /* — 34 faits — */
+  F("Le devis a été signé le 12 mars.", "Un chantier de cuisine", "Une date, un document : c’est vérifiable."),
+  F("L’artisan n’est pas venu sur le chantier depuis le 3 avril.", "Un chantier de cuisine", "Observable et daté : n’importe qui pourrait le constater."),
+  F("J’ai envoyé deux courriels, le 5 et le 19 mai.", "Une réclamation", "Les courriels existent et portent une date : c’est une preuve."),
+  F("Le loyer de juin n’a pas été versé.", "Un bail", "Un relevé de compte le montre : c’est un fait."),
+  F("Mon voisin a taillé sa haie à 22 h 30, un dimanche.", "Un voisinage", "Une heure, un jour, une action : rien n’y est interprété."),
+  F("La facture indique 4 200 €, le devis 3 800 €.", "Un chantier de cuisine", "Deux documents, deux montants : c’est vérifiable."),
+  F("Mon associé a signé seul le contrat avec le fournisseur.", "Une société", "La signature figure sur le contrat : c’est un fait."),
+  F("Le recommandé est arrivé le 2 octobre.", "Un courrier", "L’avis de réception en fait foi."),
+  F("Mon frère n’a pas répondu à mes trois appels cette semaine.", "Une succession", "Trois appels, aucune réponse : l’historique le montre. Ce qu’on en conclut est une autre affaire."),
+  F("Le colis est arrivé avec l’emballage déchiré.", "Un achat en ligne", "Une photo suffit à le prouver."),
+  F("Mon responsable a annulé deux fois notre entretien annuel.", "Le travail", "Deux annulations, sans doute traçables dans l’agenda : c’est un fait."),
+  F("Il a dit : « Vous allez le regretter. »", "Un voisinage", "Ce sont ses mots exacts, rapportés tels quels. « Il m’a menacé » serait déjà une interprétation."),
+  F("Le bail prévoit un préavis de trois mois.", "Un bail", "C’est écrit dans le contrat : il suffit de le relire."),
+  F("Le chèque de 1 500 € a été encaissé le 8 juin.", "Une vente", "Le relevé bancaire le prouve."),
+  F("La lettre de licenciement est datée du 14 septembre.", "Le travail", "Un document, une date : c’est un fait."),
+  F("Le compteur d’eau indiquait 412 m³ au départ du locataire.", "Un état des lieux", "Un relevé chiffré, inscrit à l’état des lieux : c’est un fait."),
+  F("Ma sœur occupe seule la maison de nos parents depuis 2023.", "Une succession", "Une situation constatable, datée : c’est un fait. Ce qu’on en pense est une autre question."),
+  F("Le contrat ne comporte aucune clause de médiation.", "Un contrat", "Il suffit de lire le contrat pour le vérifier."),
+  F("Trois voisins ont signé la pétition.", "Une copropriété", "Trois signatures, sur un document : c’est un fait."),
+  F("Je n’ai pas reçu le procès-verbal de l’assemblée générale.", "Une copropriété", "Ce que vous avez reçu, ou non, est un fait. « On me le cache » serait une interprétation."),
+  F("La porte du garage est fissurée sur toute la hauteur.", "Un chantier", "Visible et photographiable : c’est un fait."),
+  F("Le salaire d’août a été versé le 12 septembre.", "Le travail", "Le bulletin et le relevé de compte le montrent."),
+  F("L’annonce indiquait : « aucuns travaux à prévoir ».", "Une vente immobilière", "Les mots exacts de l’annonce, cités tels quels : c’est un fait."),
+  F("La réunion de médiation est fixée au 3 décembre à 10 h.", "Une médiation", "Une date, une heure, une convocation : c’est un fait."),
+  F("Il manque deux chaises dans la livraison.", "Un achat", "Le bon de livraison et un simple comptage le prouvent."),
+  F("Les enfants ont été ramenés à 20 h au lieu de 18 h.", "Une famille", "Deux heures, constatables : c’est un fait. « Il le fait exprès » serait une interprétation."),
+  F("L’assurance a refusé la prise en charge par courrier du 20 mai.", "Une assurance", "Le courrier existe et porte une date : c’est un fait."),
+  F("Le terrain voisin est clôturé depuis le mois de mars.", "Un voisinage", "La clôture se voit, et se date : c’est un fait."),
+  F("Aucune assemblée n’a approuvé les comptes de l’exercice 2025.", "Une société", "Le registre des décisions le montre : c’est un fait."),
+  F("Le médecin du travail a rendu un avis d’inaptitude.", "Le travail", "Un document officiel existe : c’est un fait."),
+  F("Le chien du voisin a aboyé de 6 h à 7 h ce matin.", "Un voisinage", "Une durée, une heure : un enregistrement pourrait le montrer."),
+  F("J’ai reçu une mise en demeure par lettre recommandée.", "Un courrier", "Le pli et son avis de réception en font foi."),
+  F("La signature de l’acte est fixée au 15 janvier.", "Une vente immobilière", "Une date convenue, écrite : c’est un fait."),
+  F("L’appartement figure sur une plateforme de location depuis juillet.", "Un bail", "L’annonce est visible et datée : c’est un fait. Ce qu’elle prouve reste à établir."),
+
+  /* — 33 interprétations — */
+  I("Il le fait exprès pour m’énerver.", "Un voisinage", "Prêter une intention à l’autre, c’est interpréter : personne ne peut filmer une intention."),
+  I("Elle ne respecte jamais rien.", "Une colocation", "« Jamais », « toujours » : les généralisations sont des jugements, pas des faits."),
+  I("L’artisan m’a abandonné.", "Un chantier de cuisine", "« Abandonné » est un jugement. Le fait serait : « il n’est pas revenu depuis le 3 avril »."),
+  I("Mon voisin est un égoïste.", "Un voisinage", "Un trait de caractère attribué à quelqu’un : c’est un jugement."),
+  I("Ils veulent me pousser à démissionner.", "Le travail", "C’est une hypothèse sur leurs intentions. Elle se vérifie avec des faits."),
+  I("Le notaire est du côté de ma sœur.", "Une succession", "Une impression sur la position d’autrui, pas un fait constatable."),
+  I("Le chantier est en retard.", "Un chantier de cuisine", "Piège : « en retard » suppose une date convenue. « Prévu le 1er mars, toujours pas fini » en ferait un fait."),
+  I("Je me sens trahi.", "Une société", "Piège : « trahi » ressemble à une émotion, mais c’est un jugement sur l’autre. Dessous : de la colère, de la tristesse ?"),
+  I("Je me sens ignoré.", "Le travail", "Piège : « ignoré » décrit ce que l’autre ferait, pas ce que vous ressentez. La communication non violente le range parmi les jugements."),
+  I("Il ment depuis le début.", "Une société", "Une accusation, pas un constat. Les faits contradictoires, eux, peuvent se prouver."),
+  I("C’est injuste.", "Une succession", "Une appréciation morale : légitime, mais c’est une lecture de la situation."),
+  I("Mon associé me cache des choses.", "Une société", "Un soupçon. Le fait serait : « je n’ai pas reçu les comptes demandés le 4 juin »."),
+  I("Le prix est exorbitant.", "Un achat", "Un jugement de valeur. Le fait : le montant, comparé à d’autres devis."),
+  I("Elle n’a aucune intention de payer.", "Une créance", "Une intention prêtée. Le fait : la somme n’est pas réglée depuis telle date."),
+  I("Je sens qu’il va me rouler.", "Une vente", "Piège : « je sens que » introduit une prédiction, pas une émotion. L’émotion serait : « j’ai peur d’être trompé »."),
+  I("J’ai l’impression qu’on me prend pour un idiot.", "Une administration", "Piège : c’est ce que vous pensez que l’autre pense. Une interprétation, même si elle fait mal."),
+  I("Il cherche à me faire craquer.", "Le travail", "Une intention prêtée à l’autre : c’est une interprétation."),
+  I("Le syndic s’en moque complètement.", "Une copropriété", "Personne ne peut constater ce dont quelqu’un « se moque ». Le fait : trois demandes sans réponse, par exemple."),
+  I("Ma sœur a manipulé nos parents.", "Une succession", "Une accusation lourde : c’est une interprétation tant qu’aucun fait précis ne l’étaie."),
+  I("Ce vendeur est malhonnête.", "Une vente", "Un jugement sur la personne. Les faits : ce qu’il a dit, écrit, livré."),
+  I("Il m’a menacé.", "Un voisinage", "Piège : « menacé » résume et qualifie. Ses mots exacts, eux, seraient un fait."),
+  I("Mon employeur veut se débarrasser de moi.", "Le travail", "Une hypothèse sur une intention : c’est une interprétation."),
+  I("Le locataire a saccagé l’appartement.", "Un état des lieux", "« Saccagé » est un jugement. Le fait : la liste des dégradations, photos à l’appui."),
+  I("Ils ne m’ont pas respecté.", "Une administration", "Une appréciation de leur attitude. Le fait : ce qu’ils ont dit ou fait, précisément."),
+  I("C’est toujours moi qui fais les efforts.", "Une famille", "« Toujours » : une généralisation, donc une interprétation."),
+  I("L’expert a bâclé son rapport.", "Une expertise", "Un jugement sur un travail. Les faits : les points non examinés, les erreurs relevées."),
+  I("Mon associé profite de la situation.", "Une société", "Une intention prêtée. Les faits : ce qu’il a perçu, décidé, signé."),
+  I("Le délai est déraisonnable.", "Une procédure", "Une appréciation. Le fait : le délai lui-même, en jours ou en mois."),
+  I("Je me sens rejeté.", "Une famille", "Piège : « rejeté » décrit ce que les autres feraient. L’émotion dessous : de la tristesse, peut-être de la colère."),
+  I("Je me sens manipulé.", "Une vente", "Piège : « manipulé » accuse l’autre d’une intention. L’émotion serait : de la méfiance, de la colère."),
+  I("J’ai le sentiment qu’il ne m’écoute pas.", "Une médiation", "Piège : « j’ai le sentiment que » introduit un jugement sur l’autre, pas une émotion."),
+  I("Le voisin fait tout pour me pourrir la vie.", "Un voisinage", "Une intention et une généralisation : c’est une interprétation."),
+  I("La banque m’a piégé avec ce crédit.", "Un crédit", "« Piégé » prête une intention. Les faits : les clauses, les informations reçues avant la signature."),
+
+  /* — 33 émotions — */
+  E("Je suis en colère.", "Un chantier de cuisine", "la colère", "famille de la colère, à son degré de base", "Une émotion, nommée simplement : elle est la vôtre, et elle est légitime."),
+  E("J’ai peur de perdre ma maison.", "Un crédit", "la peur", "famille de la peur, à son degré de base", "La peur, et son objet : c’est une émotion clairement nommée."),
+  E("J’ai beaucoup de chagrin depuis le partage.", "Une succession", "le chagrin", "famille de la tristesse, à son degré le plus fort", "Ce que vous éprouvez, vous : c’est une émotion."),
+  E("Je suis inquiet pour la suite.", "Le travail", "l’appréhension", "famille de la peur, à son degré le plus léger", "L’inquiétude dit ce que vous vivez, sans accuser personne."),
+  E("Je suis soulagé depuis l’accord.", "Une médiation", "le soulagement", "famille de la joie, proche de la sérénité", "Elle parle de vous, pas de l’autre : c’est une émotion."),
+  E("Je suis triste que nous en soyons arrivés là.", "Une famille", "la tristesse", "famille de la tristesse, à son degré de base", "La tristesse, nommée sans accusation : c’est une émotion."),
+  E("Je suis découragé.", "Une procédure", "le découragement", "proche de la tristesse", "Un état intérieur : c’est une émotion."),
+  E("J’ai honte d’en parler à ma famille.", "Une dette", "la honte", "une émotion composée, mêlant peur et dégoût", "La honte vous appartient : c’est une émotion."),
+  E("Je suis stressé à chaque courrier.", "Une administration", "l’anxiété", "une émotion composée, mêlant attente et peur", "Ce que vous ressentez quand le courrier arrive : c’est une émotion."),
+  E("Je suis déçu.", "Une collaboration", "la déception", "proche de la tristesse", "Elle dit votre ressenti, pas les torts de l’autre : c’est une émotion."),
+  E("Je suis furieux.", "Un chantier", "la rage", "famille de la colère, à son degré le plus fort", "« Furieux » dit une colère à son maximum : nommer le degré compte."),
+  E("Je suis agacé.", "Une colocation", "la contrariété", "famille de la colère, à son degré le plus léger", "Une colère légère, nommée tôt : c’est une émotion."),
+  E("J’ai peur de le croiser dans l’escalier.", "Un voisinage", "la peur", "famille de la peur, à son degré de base", "La peur, et la situation qui la déclenche : c’est une émotion."),
+  E("Je suis terrifié à l’idée de l’audience.", "Une procédure", "la terreur", "famille de la peur, à son degré le plus fort", "Une peur à son maximum : la nommer aide à la regarder en face."),
+  E("Je suis surpris par sa réponse.", "Une négociation", "la surprise", "famille de la surprise, à son degré de base", "Ce que vous éprouvez face à l’inattendu : c’est une émotion."),
+  E("Je suis stupéfait.", "Une succession", "la stupéfaction", "famille de la surprise, à son degré le plus fort", "Une surprise à son maximum : c’est une émotion."),
+  E("Je suis dégoûté par ce que j’ai découvert.", "Une société", "le dégoût", "famille du dégoût, à son degré de base", "Le dégoût dit votre réaction, pas les faits découverts : c’est une émotion."),
+  E("J’éprouve de l’aversion pour cette personne.", "Le travail", "l’aversion", "famille du dégoût, à son degré le plus fort", "Une émotion intense, qui parle de vous : c’est une émotion."),
+  E("Je suis serein depuis la médiation.", "Une médiation", "la sérénité", "famille de la joie, à son degré le plus léger", "Un état intérieur apaisé : c’est une émotion."),
+  E("Je suis heureux que ce soit fini.", "Une procédure", "la joie", "famille de la joie, à son degré de base", "La joie aussi a sa place dans un conflit : c’est une émotion."),
+  E("J’ai confiance dans le médiateur.", "Une médiation", "la confiance", "famille de la confiance, à son degré de base", "La confiance est l’une des huit émotions de base de la roue."),
+  E("J’ai hâte que l’audience arrive.", "Une procédure", "l’anticipation", "famille de l’anticipation, à son degré de base", "L’attente tournée vers l’avenir : c’est une émotion."),
+  E("Je suis sur le qui-vive.", "Un voisinage", "la vigilance", "famille de l’anticipation, à son degré le plus fort", "Un état d’alerte intérieur : c’est une émotion."),
+  E("Je me sens coupable d’avoir signé trop vite.", "Un contrat", "la culpabilité", "une émotion composée", "Elle parle de vous et de votre geste : c’est une émotion. « Je suis nul » serait un jugement."),
+  E("Je me sens seul face à tout ça.", "Une succession", "la solitude", "proche de la tristesse", "Ce que vous vivez, vous : c’est une émotion."),
+  E("Je suis anxieux en attendant le jugement.", "Une procédure", "l’anxiété", "une émotion composée, mêlant attente et peur", "Une attente chargée de peur : c’est une émotion."),
+  E("J’ai du mépris pour ses méthodes.", "Une société", "le mépris", "une émotion composée, mêlant dégoût et colère", "Le mépris est votre réaction : c’est une émotion. « Ses méthodes sont malhonnêtes » serait un jugement."),
+  E("Je suis nerveux avant le rendez-vous.", "Un rendez-vous", "l’appréhension", "famille de la peur, à son degré le plus léger", "Une peur légère, avant un moment attendu : c’est une émotion."),
+  E("Je suis contrarié.", "Une copropriété", "la contrariété", "famille de la colère, à son degré le plus léger", "Une colère légère, nommée à temps : c’est une émotion."),
+  E("Je suis désespéré.", "Une dette", "le désespoir", "une émotion composée, mêlant peur et tristesse", "Un état intérieur très lourd : le nommer est un premier pas. N’hésitez pas à en parler à un proche."),
+  E("J’ai de l’espoir depuis notre dernier échange.", "Une négociation", "l’espoir", "une émotion composée, mêlant attente et confiance", "Une émotion tournée vers l’avenir : elle parle de vous."),
+  E("J’envie la part qu’il a reçue.", "Une succession", "l’envie", "une émotion composée, mêlant tristesse et colère", "L’envie dit ce que vous ressentez, pas ce que l’autre mérite : c’est une émotion."),
+  E("Je suis épuisé par cette situation.", "Une succession", "l’abattement", "proche de la tristesse", "Ce que la situation vous fait vivre : c’est une émotion, même si elle se ressent aussi dans le corps."),
+];
+
+/* ——— utilitaires ——— */
+const $ = (id) => document.getElementById(id);
+const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+const load = () => { try { return JSON.parse(localStorage.getItem(KEY) || "null"); } catch { return null; } };
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* indisponible */ } };
+(function spiral() {
+  const p = []; for (let i = 0; i <= 140; i++) { const t = i / 140, th = t * 3.4 * 2 * Math.PI, r = t * 10.5;
+    p.push(`${(12 + r * Math.cos(th - Math.PI / 2)).toFixed(2)},${(12 + r * Math.sin(th - Math.PI / 2)).toFixed(2)}`); }
+  $("spiral").setAttribute("points", p.join(" "));
+})();
+
+/* ——— cycle de 10 parties : les 100 cartes, chacune vue une fois ——— */
+const QUOTA = (g) => (g < 4 ? [4, 3, 3] : g < 7 ? [3, 4, 3] : [3, 3, 4]); // 34 faits, 33 interprétations, 33 émotions
+function newCycle() {
+  const ids = (k) => shuffle(DECK.map((c, i) => (c.k === k ? i : -1)).filter((i) => i >= 0));
+  return { order: { fait: ids("fait"), interp: ids("interp"), emotion: ids("emotion") }, game: 0,
+    stats: { n: { fait: 0, interp: 0, emotion: 0 }, ok: { fait: 0, interp: 0, emotion: 0 }, conf: {}, trapTot: 0, trapOk: 0 } };
+}
+let S = load() || { best: null, cycle: newCycle() };
+if (!S.cycle) S.cycle = newCycle();
+
+/* ——— état de la partie ——— */
+let round = [], idx = 0, answers = [], locked = false;
+
+function show(id) {
+  ["s-intro", "s-play", "s-end", "s-synth"].forEach((s) => $(s).classList.toggle("on", s === id));
+  $("dots").style.display = id === "s-play" ? "flex" : "none";
+  $("counter").textContent = "";
+  window.scrollTo(0, 0);
+}
+function refreshIntro() {
+  const g = S.cycle.game;
+  $("best").textContent = typeof S.best === "number" ? `Votre meilleur score : ${S.best} sur ${ROUND}` : "";
+  $("cycle").innerHTML = g >= GAMES ? "Vos dix parties sont terminées : votre synthèse est prête."
+    : g === 0 ? `Dix parties de dix cartes : <b>100 phrases</b>, jamais deux fois la même.`
+    : `Partie <b>${g + 1}</b> sur ${GAMES}. Encore ${GAMES - g} avant votre synthèse.`;
+  $("start").textContent = g >= GAMES ? "Recommencer dix parties" : g === 0 ? "Commencer la partie" : `Jouer la partie ${g + 1}`;
+  $("open-synth").hidden = g < GAMES;
+}
+
+function newRound() {
+  if (S.cycle.game >= GAMES) { S.cycle = newCycle(); save(); }
+  const g = S.cycle.game, q = QUOTA(g), used = [0, 0, 0];
+  for (let i = 0; i < g; i++) QUOTA(i).forEach((v, j) => (used[j] += v));
+  const o = S.cycle.order;
+  round = shuffle([...o.fait.slice(used[0], used[0] + q[0]), ...o.interp.slice(used[1], used[1] + q[1]), ...o.emotion.slice(used[2], used[2] + q[2])])
+    .map((i) => DECK[i]);
+  idx = 0; answers = [];
+  $("dots").innerHTML = round.map(() => "<i></i>").join("");
+  show("s-play"); deal();
+}
+
+function deal() {
+  const c = round[idx];
+  locked = false;
+  $("verdict").classList.remove("on", "ko");
+  $("choices").querySelectorAll("button").forEach((b) => (b.disabled = false));
+  const card = $("card");
+  card.style.transition = "none"; card.style.transform = "translateY(24px) scale(.97)"; card.style.opacity = "0";
+  $("tint").style.opacity = 0;
+  $("ctx").textContent = c.c; $("phrase").textContent = c.p;
+  requestAnimationFrame(() => requestAnimationFrame(() => { card.style.transition = ""; card.style.transform = ""; card.style.opacity = "1"; }));
+  $("counter").innerHTML = `Partie ${S.cycle.game + 1}, carte <strong>${idx + 1}</strong> sur ${ROUND}`;
+  [...$("dots").children].forEach((d, i) => d.classList.toggle("now", i === idx));
+  card.focus({ preventScroll: true });
+}
+
+function answer(k) {
+  if (locked) return; locked = true;
+  const c = round[idx], ok = k === c.k;
+  answers.push({ truth: c.k, given: k, ok, trap: c.w.startsWith("Piège") });
+  $("card").style.transform = { fait: "translateX(-14px) rotate(-3deg)", interp: "translateY(-14px)", emotion: "translateX(14px) rotate(3deg)" }[k];
+  $("tint").style.background = ok ? "rgba(127,168,106,.14)" : "rgba(192,87,75,.12)"; $("tint").style.opacity = 1;
+  $("dots").children[idx].className = ok ? "ok" : "ko";
+  $("choices").querySelectorAll("button").forEach((b) => (b.disabled = true));
+  // l’émotion précise, quand c’en est une
+  const what = c.k === "emotion" ? `une émotion : ${c.e[0]}` : LABEL[c.k];
+  $("v-title").textContent = ok ? `Juste, c’est ${what}.` : `Non, c’est ${what}.`;
+  $("v-emo").hidden = c.k !== "emotion";
+  if (c.k === "emotion") $("v-emo").textContent = `Sur la roue des émotions : ${c.e[1]}.`;
+  $("v-why").textContent = c.w;
+  $("verdict").classList.toggle("ko", !ok); $("verdict").classList.add("on");
+  $("next").textContent = idx === ROUND - 1 ? "Voir mon résultat" : "Carte suivante";
+  setTimeout(() => $("next").focus({ preventScroll: true }), 50);
+}
+
+function next() { if (idx < ROUND - 1) { idx++; deal(); } else finish(); }
+
+const LESSONS = {
+  "interp>fait": ["Vous prenez parfois une interprétation pour un fait.", "C’est le piège le plus courant dans un dossier. Un juge ou un médiateur ne retient que ce qui se prouve : une date, un document, des mots exacts."],
+  "interp>emotion": ["« Trahi », « ignoré », « abandonné » vous ont trompé.", "Ces mots ressemblent à des émotions, mais ils décrivent ce que l’autre ferait. En dessous, il y a souvent de la colère ou de la tristesse : nommer celles-là apaise davantage."],
+  "fait>interp": ["Vous vous méfiez des faits eux-mêmes.", "Un fait daté et prouvable n’accuse personne : c’est votre meilleur allié, dans une discussion comme devant un juge."],
+  "fait>emotion": ["Certains faits vous ont semblé chargés d’émotion.", "C’est normal quand on est pris dans un conflit. Le fait reste le même ; c’est votre ressenti qui l’accompagne, et il mérite d’être nommé à part."],
+  "emotion>interp": ["Vous hésitez à voir vos émotions comme des émotions.", "Dire « je suis en colère » n’accuse personne. C’est une information sur vous, et elle est légitime."],
+  "emotion>fait": ["Vous avez classé des émotions parmi les faits.", "Une émotion est bien réelle, mais elle se dit à la première personne : elle parle de vous, pas de ce qui s’est passé."],
+};
+const PERFECT = ["Vous savez déjà séparer les faits, leur lecture et vos émotions.", "C’est la base d’un dossier solide, et de toute discussion apaisée."];
+function topLesson(conf) {
+  const top = Object.entries(conf).sort((a, b) => b[1] - a[1])[0];
+  return top ? LESSONS[top[0]] : PERFECT;
+}
+function barsHTML(n, ok) {
+  return ["fait", "interp", "emotion"].map((k) => `<li><span>${NAME[k]}</span><span class="t"><span style="width:${n[k] ? (100 * ok[k]) / n[k] : 0}%;background:${COLOR[k]}"></span></span><span class="v">${ok[k]}/${n[k]}</span></li>`).join("");
+}
+
+function finish() {
+  const score = answers.filter((a) => a.ok).length;
+  if (!(S.best >= score)) S.best = score;
+  // cumul sur le cycle
+  const st = S.cycle.stats, n = { fait: 0, interp: 0, emotion: 0 }, ok = { fait: 0, interp: 0, emotion: 0 }, conf = {};
+  answers.forEach((a) => {
+    n[a.truth]++; st.n[a.truth]++;
+    if (a.ok) { ok[a.truth]++; st.ok[a.truth]++; } else { const k = a.truth + ">" + a.given; conf[k] = (conf[k] || 0) + 1; st.conf[k] = (st.conf[k] || 0) + 1; }
+    if (a.trap) { st.trapTot++; if (a.ok) st.trapOk++; }
+  });
+  S.cycle.game++; save();
+  const last = S.cycle.game >= GAMES;
+
+  $("score").innerHTML = `${score}<small> / ${ROUND}</small>`;
+  $("t-end").textContent = score === ROUND ? "Sans faute." : score >= 8 ? "Vous séparez bien les faits de leur lecture." : score >= 5 ? "Les pièges vous ont parfois eu. Rien d’étonnant : ils piègent tout le monde." : "Tout se mélange encore un peu. C’est exactement ce que fait un conflit.";
+  $("bars").innerHTML = barsHTML(n, ok);
+  const L = topLesson(conf);
+  $("lesson").innerHTML = `<b>${L[0]}</b>${L[1]}`;
+  if (TOOL_URL) { $("tool").href = TOOL_URL; $("tool").hidden = false; }
+  $("to-synth").hidden = !last;
+  $("again").hidden = last;
+  $("again").textContent = `Jouer la partie ${S.cycle.game + 1} sur ${GAMES}`;
+  $("toast").textContent = last ? "Dix parties, cent phrases : votre synthèse est prête." : "";
+  show("s-end"); (last ? $("to-synth") : $("again")).focus({ preventScroll: true });
+}
+
+function synthesis() {
+  const st = S.cycle.stats, tot = st.ok.fait + st.ok.interp + st.ok.emotion, all = st.n.fait + st.n.interp + st.n.emotion;
+  $("sy-score").textContent = `${tot} bonnes réponses sur ${all}${st.trapTot ? `, dont ${st.trapOk} pièges déjoués sur ${st.trapTot}` : ""}.`;
+  $("sy-bars").innerHTML = barsHTML(st.n, st.ok);
+  const L = topLesson(st.conf);
+  $("sy-lesson").innerHTML = `<b>${L[0]}</b>${L[1]}`;
+  if (TOOL_URL) { $("sy-tool").href = TOOL_URL; $("sy-tool").hidden = false; }
+  show("s-synth");
+}
+
+async function share() {
+  const score = answers.filter((a) => a.ok).length;
+  const txt = `J’ai fait ${score} sur ${ROUND} à « Fait ou ressenti ? », le jeu Révéla. Et vous, savez-vous séparer les faits de leur lecture ?`;
+  try {
+    if (navigator.share) { await navigator.share({ title: "Fait ou ressenti ?", text: txt, url: SHARE_URL }); return; }
+    await navigator.clipboard.writeText(`${txt} ${SHARE_URL}`);
+    $("toast").textContent = "Texte copié : collez-le où vous voulez.";
+  } catch (e) {
+    if (e && e.name === "AbortError") return;
+    $("toast").textContent = "Partage indisponible ici. Faites une capture d’écran de votre score.";
+  }
+}
+
+/* ——— glisser la carte ——— */
+(function drag() {
+  const card = $("card"), H = { fait: $("h-l"), interp: $("h-u"), emotion: $("h-r") };
+  let x0 = 0, y0 = 0, dx = 0, dy = 0, on = false;
+  const pick = () => (dx < -70 && Math.abs(dx) > Math.abs(dy) ? "fait" : dx > 70 && Math.abs(dx) > Math.abs(dy) ? "emotion" : dy < -70 ? "interp" : null);
+  const hot = () => { const p = pick(); Object.entries(H).forEach(([k, el]) => el.classList.toggle("hot", k === p)); };
+  card.addEventListener("pointerdown", (e) => { if (locked) return; on = true; x0 = e.clientX; y0 = e.clientY; dx = dy = 0; card.setPointerCapture(e.pointerId); card.classList.add("drag"); });
+  card.addEventListener("pointermove", (e) => { if (!on) return; dx = e.clientX - x0; dy = e.clientY - y0;
+    card.style.transform = `translate(${dx}px, ${Math.min(dy, 40)}px) rotate(${dx / 18}deg)`; hot(); });
+  const end = () => { if (!on) return; on = false; card.classList.remove("drag"); const p = pick();
+    Object.values(H).forEach((el) => el.classList.remove("hot"));
+    if (p) answer(p); else card.style.transform = ""; };
+  card.addEventListener("pointerup", end); card.addEventListener("pointercancel", end);
+})();
+
+/* ——— commandes ——— */
+$("start").onclick = newRound; $("again").onclick = newRound; $("next").onclick = next; $("share").onclick = share;
+$("to-synth").onclick = synthesis; $("open-synth").onclick = synthesis;
+$("restart").onclick = () => { S.cycle = newCycle(); save(); refreshIntro(); show("s-intro"); };
+$("home").onclick = (e) => { e.preventDefault(); refreshIntro(); show("s-intro"); };
+$("choices").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) answer(b.dataset.k); });
+document.addEventListener("keydown", (e) => {
+  if (!$("s-play").classList.contains("on")) return;
+  const map = { ArrowLeft: "fait", ArrowUp: "interp", ArrowRight: "emotion", "1": "fait", "2": "interp", "3": "emotion" };
+  if (map[e.key] && !locked) { e.preventDefault(); answer(map[e.key]); }
+  else if ((e.key === "Enter" || e.key === " ") && locked && document.activeElement !== $("next")) { e.preventDefault(); next(); }
+});
+refreshIntro(); show("s-intro");
+</script>
+
+</body>
+</html>
